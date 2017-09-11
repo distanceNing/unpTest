@@ -17,6 +17,8 @@
 
 #define BUF_SIZE 1024
 
+#define MAYBE_TIME_OUT 5000
+
 typedef int ERROR_TYPE; 
 
 

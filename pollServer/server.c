@@ -2,13 +2,16 @@
 #include <signal.h>
 #define SERVER_PORT 9000
 #include "strEcho.h" 
+#include <time.h>
 int main()
 {
  // int recv_size=-1;
+    time_t start_time=time(0);
+    struct tm* tm=localtime(&start_time);
+    printf("server start time :%d : %d : %d \n",tm->tm_hour,tm->tm_min,tm->tm_sec);
     int i,connfd,maxi,listenfd,maxfds,nready;
     int flag;
    // struct pollfd clientfd[OPEN_MAX];
-    //pid_t childpid;
 //    socklen_t clilen;
     struct pollfd* clientfd;
 //    char connIP[32];
@@ -35,16 +38,12 @@ int main()
     printf("initPollArray success ! \n");
     flag=pollHandleConnect(clientfd,listenfd,OPEN_MAX);
     free(clientfd);
+    time_t end_time=time(0);
+    tm=localtime(&end_time);
+    printf("server start time :%d : %d : %d \n",tm->tm_hour,tm->tm_min,tm->tm_sec);
 
-
-
-//  signal(SIGCHLD,sigChild);
-/*   printf("wait for connect \n");
+/*  printf("wait for connect \n");
     maxi=0;
-    maxfds=listenfd;
-//    fd_set allset,rset;
-//    FD_ZERO(&allset);
-//    FD_SET(listenfd,&allset);
     clientfd[0].fd=listenfd;
     clientfd[0].events=POLLIN;
     for(i=1;i<OPEN_MAX;++i)
@@ -90,10 +89,9 @@ int main()
         for(i=0;i<=maxi;i++)
             {
                 memset(recv_buf,BUF_SIZE,0);
-              close(listenfd);
+                close(listenfd);
                 strEcho(connfd);
                 exit(0);
-
                 if(clientfd[i].fd<0)
                     continue;
                 if(clientfd[i].revents&POLLIN)
