@@ -5,17 +5,17 @@
 #include <time.h>
 int main()
 {
- // int recv_size=-1;
+    int recv_size=-1;
     time_t start_time=time(0);
     struct tm* tm=localtime(&start_time);
     printf("server start time :%d : %d : %d \n",tm->tm_hour,tm->tm_min,tm->tm_sec);
     int i,connfd,maxi,listenfd,maxfds,nready;
     int flag;
-   // struct pollfd clientfd[OPEN_MAX];
-//    socklen_t clilen;
-    struct pollfd* clientfd;
-//    char connIP[32];
-//    char recv_buf[BUF_SIZE];
+    struct pollfd clientfd[OPEN_MAX];
+    socklen_t clilen;
+//    struct pollfd* clientfd;
+    char connIP[32];
+    char recv_buf[BUF_SIZE];
     struct sockaddr_in cliaddr,serveraddr;
     
     listenfd=socket(AF_INET,SOCK_STREAM,0);
@@ -29,20 +29,17 @@ int main()
     listen(listenfd,5);
 
 
-    clientfd=initPollArray(OPEN_MAX);
-    if(clientfd==NULL)
-    {
-        printf("initPollArray failed !\n");
-        return -1;
-    }
-    printf("initPollArray success ! \n");
-    flag=pollHandleConnect(clientfd,listenfd,OPEN_MAX);
-    free(clientfd);
-    time_t end_time=time(0);
-    tm=localtime(&end_time);
-    printf("server start time :%d : %d : %d \n",tm->tm_hour,tm->tm_min,tm->tm_sec);
+//    clientfd=initPollArray(OPEN_MAX);
+//    if(clientfd==NULL)
+//    {
+//        printf("initPollArray failed !\n");
+//        return -1;
+//    }
+//    printf("initPollArray success ! \n");
+//    flag=pollHandleConnect(clientfd,listenfd,OPEN_MAX);
+//    free(clientfd);
 
-/*  printf("wait for connect \n");
+    printf("wait for connect \n");
     maxi=0;
     clientfd[0].fd=listenfd;
     clientfd[0].events=POLLIN;
@@ -86,16 +83,14 @@ int main()
             if(--nready<=0)
                 continue;
         }
-        for(i=0;i<=maxi;i++)
+        for(i=1;i<=maxi;i++)
             {
                 memset(recv_buf,BUF_SIZE,0);
-                close(listenfd);
-                strEcho(connfd);
-                exit(0);
                 if(clientfd[i].fd<0)
                     continue;
                 if(clientfd[i].revents&POLLIN)
                 {
+                    printf("fd %d is readable\n",clientfd[i].fd);
                     if((recv_size=read(clientfd[i].fd,recv_buf,BUF_SIZE))==0)
                     {
                         close(clientfd[i].fd);
@@ -103,12 +98,15 @@ int main()
                     }
                     else
                         write(clientfd[i].fd,recv_buf,recv_size);
-                }
                 if(--nready<=0)
                     break;
+                }
             }
     }
-*/    
+    
+    time_t end_time=time(0);
+    tm=localtime(&end_time);
+    printf("server start time :%d : %d : %d \n",tm->tm_hour,tm->tm_min,tm->tm_sec);
     return 0;
 }
 

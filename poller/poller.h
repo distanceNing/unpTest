@@ -5,13 +5,11 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
-#include <sys/time.h>
-#include <sys/select.h>
-#include <sys/wait.h>
-#include <sys/select.h>
 #include <poll.h>
 #include <stdlib.h>
-#include <stdbool.h>
+
+
+#include <vector>
 
 #define OPEN_MAX 10
 
@@ -21,6 +19,15 @@
 
 typedef int ERROR_TYPE; 
 
+class Poller
+{
+public:
+    Poller(int openMax):pollList_(openMax){}
+
+private:
+
+    std::vector<struct pollfd> pollList_;
+};
 
 struct pollfd* initPollArray(int openMax);
 

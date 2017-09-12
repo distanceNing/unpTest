@@ -1,4 +1,4 @@
-#include "strEcho.h"
+#include "poller.h"
 
 
 bool clientHandle(int clientfd)
@@ -35,11 +35,11 @@ ERROR_TYPE pollHandleConnect(struct pollfd* clientfd,int listenfd,int openMax)
     memset(&cliaddr,0,sizeof(cliaddr));
     clientfd[0].fd=listenfd;
     clientfd[0].events=POLLIN;
-    maxi=1;
+    maxi=0;
     printf("wait for connection ! \n");
     for(;;)
     {
-        nready=poll(clientfd,maxi,MAYBE_TIME_OUT);
+        nready=poll(clientfd,maxi+1,MAYBE_TIME_OUT);
         if(nready==0)
         {
             printf("maybe time out ------ \n");
@@ -96,8 +96,8 @@ ERROR_TYPE pollHandleConnect(struct pollfd* clientfd,int listenfd,int openMax)
                     close(clientfd[i].fd);
                     clientfd[i].fd=-1;
                 }
-            if(--nready<=0)
-                break;
+                if(--nready<=0)
+                    break;
             }
         }
     }
