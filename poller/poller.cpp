@@ -1,5 +1,14 @@
 #include "poller.h"
 
+#include <stdlib.h>
+
+
+int  Poller::Poll(int time_out)
+{
+    int num_ready=-1;
+    num_ready=poll(&*pollfdList_.begin(),pollfdList_.size(),time_out);
+    return num_ready;
+}
 
 bool clientHandle(int clientfd)
 {
@@ -21,7 +30,7 @@ struct pollfd* initPollArray(int openMax)
     if(clientfd==NULL)
         return NULL;
     for(i=1;i<openMax;i++)
-       clientfd[i].fd=-1;
+        clientfd[i].fd=-1;
     return clientfd;
 }
 
@@ -51,7 +60,7 @@ ERROR_TYPE pollHandleConnect(struct pollfd* clientfd,int listenfd,int openMax)
             return -1;
         }
         //判断监听描述符是否可读
-        
+
         if(clientfd[0].revents&POLLIN)
         {
             clilen=sizeof(cliaddr);

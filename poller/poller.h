@@ -6,10 +6,10 @@
 #include <string.h>
 #include <stdio.h>
 #include <poll.h>
-#include <stdlib.h>
 
 
 #include <vector>
+#include <map>
 
 #define OPEN_MAX 10
 
@@ -22,11 +22,21 @@ typedef int ERROR_TYPE;
 class Poller
 {
 public:
-    Poller(int openMax):pollList_(openMax){}
+    Poller(int openMax):pollfdList_(openMax)
+    {
+     for(unsigned i=0;i<pollfdList_.size();i++)
+        {
+            pollfdList_[i].fd=-1;
+        }
+    }
+
+    int Poll(int time_out);    
+
+    ~Poller(){}
 
 private:
 
-    std::vector<struct pollfd> pollList_;
+    std::vector<struct pollfd> pollfdList_;
 };
 
 struct pollfd* initPollArray(int openMax);
