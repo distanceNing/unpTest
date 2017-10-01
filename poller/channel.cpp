@@ -10,16 +10,16 @@
 
 void Channel::handleEvent()
 {
-    if(revents&POLLIN)
+    if(revents_&POLLIN)
     {
-        readCallBack();
+        readCallBack_();
     }
-    if(revents&POLLOUT)
+    if(revents_&POLLOUT)
     {
-        writeCallBack();
+        writeCallBack_();
     }
-    if(revents&POLLERR)
+    if(revents_&POLLERR)
     {
-        errorCallBack();
+        errorCallBack_();
     }
 }

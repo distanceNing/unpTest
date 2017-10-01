@@ -7,8 +7,28 @@ int  Poller::Poll(int time_out)
 {
     int num_ready=-1;
     num_ready=poll(&*pollfdList_.begin(),pollfdList_.size(),time_out);
+
     return num_ready;
 }
+
+void Poller::FillActiveChannel(int num_ready,ChannelList &acticveChannels)
+{
+    for(std::vector<struct pollfd>::iterator i;i != pollfdList_.end(); ++i)
+    {
+        if(i->revents > 0)
+        {
+            acticveChannels.push_back(channelMap_[i->events]);
+            if(--num_ready<0)
+            {
+                break;
+            }
+        }
+    }
+}
+
+
+
+
 
 bool clientHandle(int clientfd)
 {
