@@ -10,11 +10,10 @@ bool EventLoop::isLoopInThisThread()
 void EventLoop::startLoop()
 {
     isLooping_=true;
-    //    while(isLooping_)
-    //    {
-    ::poll(NULL,0,kTimeOut);
-    //   }
-
+    while(isLooping_)
+    {
+        poller_.Poll(kTimeOut);
+    }
 }
 
 void EventLoop::handleEvent()

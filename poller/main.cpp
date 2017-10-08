@@ -1,5 +1,22 @@
 #include "print_time.h"
 #include "event_loop.h"
+void wcb(int fd)
+{
+    char buffer[]="hello world";
+    size_t size=write(fd,buffer,strlen(buffer));
+    printf("writeable write size is : %lu\n",size);
+}
+
+void rcb(int fd)
+{
+    char buffer[256]={'\0'};
+    size_t size=read(fd,buffer,256);
+    printf("readable read  size is : %lu\n",size);
+}
+void ecb(int fd)
+{
+    printf("fd %d error\n",fd);
+}
 
 int main()
 {

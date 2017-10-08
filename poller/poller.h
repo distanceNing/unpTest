@@ -24,17 +24,15 @@ typedef int ERROR_TYPE;
 class Poller
 {
 public:
-    Poller(int openMax):pollfdList_(openMax)
+    Poller()
     {
-     for(unsigned i=0;i<pollfdList_.size();i++)
-        {
-            pollfdList_[i].fd=-1;
-        }
     }
 
     int Poll(int time_out);    
 
     void addNewChannel(Channel * channel);
+
+    void removeChannel(const int fd_);
 
     ~Poller(){}
 

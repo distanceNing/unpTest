@@ -1,10 +1,7 @@
 
-#include <map>
-
 #include <boost/utility.hpp>
 
-
-typedef void (*EventCallBack)();
+typedef void (*EventCallBack)(int fd);
 
 class Channel:public boost::noncopyable
 {
@@ -34,6 +31,10 @@ public:
 
     void handleEvent();
 
+    int getFd() const 
+    {
+        return fd_;
+    }
 
     ~Channel(){}
     
@@ -45,5 +46,4 @@ private:
     EventCallBack writeCallBack_;
     EventCallBack readCallBack_;
     EventCallBack errorCallBack_;
-
 };

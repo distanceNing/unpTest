@@ -27,5 +27,6 @@ private:
     bool isLooping_;
     const pid_t threadId_;
     ChannelList acticveChannels_;
+    Poller poller_;
 };
 

@@ -1,13 +1,11 @@
 #include "poller.h"
-
 #include <stdlib.h>
 
 
 int  Poller::Poll(int time_out)
 {
     int num_ready=-1;
-    num_ready=poll(&*pollfdList_.begin(),pollfdList_.size(),time_out);
-
+    num_ready=poll(pollfdList_.data(),pollfdList_.size(),time_out);
     return num_ready;
 }
 
@@ -18,7 +16,7 @@ void Poller::FillActiveChannel(int num_ready,ChannelList &acticveChannels)
         if(i->revents > 0)
         {
             acticveChannels.push_back(channelMap_[i->events]);
-            if(--num_ready<0)
+            if(--num_ready < 0)
             {
                 break;
             }
@@ -26,6 +24,38 @@ void Poller::FillActiveChannel(int num_ready,ChannelList &acticveChannels)
     }
 }
 
+void Poller::addNewChannel(Channel* channel)
+{
+    for(auto & i : pollfdList_)
+    {
+        if(i.fd == -1)
+        {
+            i.fd = channel->getFd();
+            break;
+        }
+    }
+    channelMap_.insert(std::make_pair(channel->getFd(),channel));
+}
+
+void Poller::removeChannel(int fd)
+{
+    for(auto & i :pollfdList_)
+    {
+        if(i.fd == fd)
+        {
+            i.fd = -1;
+            break;
+        }
+    }
+    for(ChannelMap::const_iterator i;i != channelMap_.end(); ++i)
+    {
+        if(i->first == fd)
+        {
+            channelMap_.erase(i);
+            break;
+        }
+    }
+}
 
 
 
