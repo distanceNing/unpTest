@@ -42,5 +42,9 @@ public:
 	bool GetPeerName(char* peerIP, UINT &peerPort);
 	bool Connect(char* conIP, UINT conPort);
 	bool CloseSocket();
+    int GetSocket() const
+    {
+        return sock;
+    }
 };
 #endif // !_CSCOKET
