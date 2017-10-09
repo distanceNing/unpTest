@@ -1,9 +1,10 @@
-
+#ifndef _CHINELL_H_
+#define _CHINELL_H_
 #include <boost/utility.hpp>
 
 typedef void (*EventCallBack)(int fd);
 
-class Channel:public boost::noncopyable
+class Channel: boost::noncopyable
 {
 
 public:
@@ -47,3 +48,4 @@ private:
     EventCallBack readCallBack_;
     EventCallBack errorCallBack_;
 };
+#endif//!_CHINELL_H_

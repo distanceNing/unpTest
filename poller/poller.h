@@ -23,12 +23,15 @@ typedef int ERROR_TYPE;
 
 class Poller
 {
+protected:
+    typedef std::map<int,Channel*> ChannelMap;
+    typedef std::vector<Channel*> ChannelList;
 public:
     Poller()
     {
     }
 
-    int Poll(int time_out);    
+    int Poll(int time_out,ChannelList & activeChannel);    
 
     void addNewChannel(Channel * channel);
 
@@ -36,11 +39,8 @@ public:
 
     ~Poller(){}
 
-protected:
-    typedef std::map<int,Channel*> ChannelMap;
-    typedef std::vector<Channel*> ChannelList;
 private:
-    void FillActiveChannel(int num_ready,ChannelList &activeChannel);
+    void fillActiveChannel(int num_ready,ChannelList &activeChannel);
 
     ChannelMap channelMap_;
     std::vector<struct pollfd> pollfdList_;

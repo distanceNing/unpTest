@@ -1,7 +1,6 @@
 
 #include "channel.h"
 
-
 #include <poll.h>
 
 

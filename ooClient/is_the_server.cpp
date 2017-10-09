@@ -5,15 +5,12 @@
 #include <stdio.h>
 int IsServerIP(const char* conIP,const int conPort,const int timeout)
 {
-	int ret = 0;
-
-
+    int ret = 0;
     Csocket sockClient;
     sockClient.CreatSocket();
-    
-	sockaddr_in conAddr = { AF_INET };
-	conAddr.sin_addr.s_addr = inet_addr(conIP);
-	conAddr.sin_port = htons(conPort);
+    sockaddr_in conAddr = { AF_INET };
+    conAddr.sin_addr.s_addr = inet_addr(conIP);
+    conAddr.sin_port = htons(conPort);
     fd_set set;
     timeval tm;
     int flag = fcntl(sockClient.GetSocket(),F_SETFL,O_NONBLOCK);
@@ -34,7 +31,7 @@ int IsServerIP(const char* conIP,const int conPort,const int timeout)
             socklen_t len=sizeof(error);
             getsockopt(sockClient.GetSocket(),SOL_SOCKET,SO_ERROR,&error,&len); 
             if(!error)
-                printf("is the ip %s -- port %d \n",conIP,conPort);    
+            printf("is the ip %s -- port %d \n",conIP,conPort);    
         }
 	    else
 	        ret = -1;

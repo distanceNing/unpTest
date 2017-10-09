@@ -1,10 +1,12 @@
 #include <vector>
 
+#include "channel.h"
 #include "poller.h"
 
 const int kTimeOut=5*1000;
 
-class Channel;
+
+
 class EventLoop
 {
 public:
@@ -23,7 +25,6 @@ public:
 protected:
     typedef std::vector<Channel*> ChannelList;
 private:
-
     bool isLooping_;
     const pid_t threadId_;
     ChannelList acticveChannels_;

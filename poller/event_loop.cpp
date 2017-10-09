@@ -12,7 +12,8 @@ void EventLoop::startLoop()
     isLooping_=true;
     while(isLooping_)
     {
-        poller_.Poll(kTimeOut);
+        poller_.Poll(kTimeOut,acticveChannels_);
+        handleEvent();
     }
 }
 

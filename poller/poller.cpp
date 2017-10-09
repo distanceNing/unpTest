@@ -2,20 +2,21 @@
 #include <stdlib.h>
 
 
-int  Poller::Poll(int time_out)
+int  Poller::Poll(int time_out,ChannelList &acticveChannels)
 {
     int num_ready=-1;
     num_ready=poll(pollfdList_.data(),pollfdList_.size(),time_out);
+    fillActiveChannel(num_ready,acticveChannels);
     return num_ready;
 }
 
-void Poller::FillActiveChannel(int num_ready,ChannelList &acticveChannels)
+void Poller::fillActiveChannel(int num_ready,ChannelList &acticveChannels)
 {
     for(std::vector<struct pollfd>::iterator i;i != pollfdList_.end(); ++i)
     {
         if(i->revents > 0)
         {
-            acticveChannels.push_back(channelMap_[i->events]);
+            acticveChannels.push_back(channelMap_[i->fd]);
             if(--num_ready < 0)
             {
                 break;
@@ -26,13 +27,22 @@ void Poller::FillActiveChannel(int num_ready,ChannelList &acticveChannels)
 
 void Poller::addNewChannel(Channel* channel)
 {
-    for(auto & i : pollfdList_)
+    if(pollfdList_.capacity() > pollfdList_.size())
     {
-        if(i.fd == -1)
+        for(auto & i : pollfdList_)
         {
-            i.fd = channel->getFd();
-            break;
+            if(i.fd == -1)
+            {
+                i.fd = channel->getFd();
+                break;
+            }
         }
+    }
+    else
+    {
+        struct pollfd temp;
+        temp.fd = channel->getFd();
+        pollfdList_.push_back(temp);
     }
     channelMap_.insert(std::make_pair(channel->getFd(),channel));
 }
