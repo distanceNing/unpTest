@@ -1,21 +1,40 @@
 #include "poller.h"
 #include <stdlib.h>
-
+#include <iostream>
 
 int  Poller::Poll(int time_out,ChannelList &acticveChannels)
 {
     int num_ready=-1;
-    num_ready=poll(pollfdList_.data(),pollfdList_.size(),time_out);
-    fillActiveChannel(num_ready,acticveChannels);
+    std::cout<<"Poll Array Size "<<pollfdList_.size() <<std::endl;
+    
+    num_ready=::poll(pollfdList_.data(),pollfdList_.size(),time_out);
+
+    if(num_ready > 0)
+    {
+        std::cout<<"Ready Event Num "<<num_ready<<std::endl;
+        fillActiveChannel(num_ready,acticveChannels);
+    }
+    else 
+    {
+        if(num_ready == 0)
+        {
+            std::cout<<"No Event Happend-----"<<std::endl;
+        }
+        else
+        {
+            perror("Poll Error");
+        }
+    }
     return num_ready;
 }
 
 void Poller::fillActiveChannel(int num_ready,ChannelList &acticveChannels)
 {
-    for(std::vector<struct pollfd>::iterator i;i != pollfdList_.end(); ++i)
+    for(std::vector<struct pollfd>::iterator i =pollfdList_.begin();i != pollfdList_.end(); ++i)
     {
         if(i->revents > 0)
         {
+            channelMap_[i->fd]->serRetEvents(i->revents);
             acticveChannels.push_back(channelMap_[i->fd]);
             if(--num_ready < 0)
             {
@@ -27,31 +46,18 @@ void Poller::fillActiveChannel(int num_ready,ChannelList &acticveChannels)
 
 void Poller::addNewChannel(Channel* channel)
 {
-    if(pollfdList_.capacity() > pollfdList_.size())
-    {
-        for(auto & i : pollfdList_)
-        {
-            if(i.fd == -1)
-            {
-                i.fd = channel->getFd();
-                break;
-            }
-        }
-    }
-    else
-    {
-        struct pollfd temp;
-        temp.fd = channel->getFd();
-        pollfdList_.push_back(temp);
-    }
+    struct pollfd temp;
+    temp.fd = channel->getFd();
+    temp.events = channel->getEvents();
+    pollfdList_.push_back(temp);
     channelMap_.insert(std::make_pair(channel->getFd(),channel));
 }
 
-void Poller::removeChannel(int fd)
+void Poller::removeChannel(Channel* channel)
 {
     for(auto & i :pollfdList_)
     {
-        if(i.fd == fd)
+        if(i.fd == channel->getFd())
         {
             i.fd = -1;
             break;
@@ -59,7 +65,7 @@ void Poller::removeChannel(int fd)
     }
     for(ChannelMap::const_iterator i;i != channelMap_.end(); ++i)
     {
-        if(i->first == fd)
+        if(i->first == channel->getFd())
         {
             channelMap_.erase(i);
             break;
@@ -83,16 +89,6 @@ bool clientHandle(int clientfd)
     return true;
 }
 
-struct pollfd* initPollArray(int openMax)
-{
-    int i;
-    struct pollfd* clientfd=(struct pollfd*)malloc(openMax*sizeof(struct pollfd));
-    if(clientfd==NULL)
-        return NULL;
-    for(i=1;i<openMax;i++)
-        clientfd[i].fd=-1;
-    return clientfd;
-}
 
 ERROR_TYPE pollHandleConnect(struct pollfd* clientfd,int listenfd,int openMax)
 {

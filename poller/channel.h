@@ -9,9 +9,9 @@ class Channel: boost::noncopyable
 
 public:
     Channel(const int fd,
-            EventCallBack wcb,
-            EventCallBack rcb,
-            EventCallBack ecb
+            EventCallBack rcb=NULL,
+            EventCallBack wcb=NULL,
+            EventCallBack ecb=NULL
             ):fd_(fd),writeCallBack_(wcb),readCallBack_(rcb),errorCallBack_(ecb){}
 
     
@@ -29,7 +29,21 @@ public:
     {
         errorCallBack_=call_back;
     }
+    
+    void setEvent(int events)
+    {
+        events_ = events;
+    }
 
+    void serRetEvents(int revents)
+    {
+        revents_ = revents;
+    }
+ 
+    int getEvents() const
+    {
+        return events_;
+    }
     void handleEvent();
 
     int getFd() const 

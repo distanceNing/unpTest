@@ -12,13 +12,24 @@ void EventLoop::startLoop()
     isLooping_=true;
     while(isLooping_)
     {
-        poller_.Poll(kTimeOut,acticveChannels_);
+        if(!acticveChannels_.empty())
+            acticveChannels_.clear();
+        poller_->Poll(kTimeOut,acticveChannels_);
         handleEvent();
     }
 }
 
+void EventLoop::addNewChannel(Channel* channel)
+{
+    if(channel != NULL)
+        poller_->addNewChannel(channel);
+}
+
+
 void EventLoop::handleEvent()
 {
+    if(acticveChannels_.empty())
+        return;
     for(auto i : acticveChannels_)
     {
         i->handleEvent();

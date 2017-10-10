@@ -11,15 +11,21 @@ void wcb(int fd)
     printf("writeable write size is : %lu\n",size);
 }
 
-void rcb(int fd)
+void rcb(int listenfd)
 {
-    char buffer[256]={'\0'};
-    size_t size=read(fd,buffer,256);
-    printf("readable read  size is : %lu\n",size);
-}
-void ecb(int fd)
-{
-    printf("fd %d error\n",fd);
+    int connfd=-1;
+    char connIP[32];
+    socklen_t clilen;
+    struct sockaddr_in cliaddr;
+    clilen=sizeof(cliaddr);
+    memset(&cliaddr,0,sizeof(cliaddr));
+    if((connfd=accept(listenfd,(struct sockaddr*)&cliaddr,&clilen))<0)
+    {
+        perror("accept error");
+    }
+    memset(connIP,'\0',32);
+    strcpy(connIP,inet_ntoa(cliaddr.sin_addr));
+    printf("connect IP: %s ------ Port: %d\n",connIP,ntohs(cliaddr.sin_port));
 }
 
 int main()
@@ -30,10 +36,14 @@ int main()
 
     //建立监听socket
     Csocket server_sock;
-    server_sock.CreatSocket(kPort);
+    server_sock.CreatSocket(AF_INET,SOCK_STREAM,kPort);
     server_sock.Listen();
 
+    Channel channel(server_sock.GetSocket(),rcb);
+    channel.setEvent(POLLIN);
+
     EventLoop main_loop;
+    main_loop.addNewChannel(&channel);
     main_loop.startLoop();
 
     time_t end_time=time(0);
