@@ -6,16 +6,14 @@
 #include "channel.h"
 #include "poller.h"
 
-const int kTimeOut=10*1000;
+const int kTimeOut = 10*1000;
 
-
-
-class EventLoop
-{
+class EventLoop {
 public:
-    EventLoop():isLooping_(false),threadId_(getpid()),poller_(new Poller){}
+    EventLoop()
+            :isLooping_(false), threadId_(getpid()), poller_(new Poller) { }
 
-    ~EventLoop(){}
+    ~EventLoop() { }
 
     bool isLoopInThisThread();
 
@@ -23,7 +21,7 @@ public:
 
     void quitLoop()
     {
-        isLooping_=false;
+        isLooping_ = false;
     }
 
     void handleEvent();
