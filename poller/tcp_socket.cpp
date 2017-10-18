@@ -1,7 +1,7 @@
 #include "tcp_socket.h"
 
 #ifndef _WIN32
-unsigned int GetLastError()
+int GetLastError()
 {
     return errno;
 }
@@ -34,48 +34,7 @@ bool TcpSocket::CreateSocket(int af, int type, int prot)
         return false;
     sockaddr_in sa = {af, htons(prot)};
     int flag = bind(sock, (sockaddr*) &sa, sizeof(sa));
-    if (flag<0) {
-        return false;
-    }
-    return true;
-}
-
-int TcpSocket::Receive(void* buffer, int buflen)
-{
-    return recv(sock, (LPSTR) buffer, buflen, 0);
-}
-
-bool TcpSocket::Sendto(const void* message, const char* toIP, const UINT toPort)
-{
-    sockaddr_in to;
-    to.sin_family = AF_INET;
-    to.sin_port = htons(toPort);
-#ifdef _WIN32
-    to.sin_addr.S_un.S_addr = inet_addr(toIP);
-
-#else
-    to.sin_addr.s_addr = inet_addr(toIP);
-#endif
-
-    int flag = sendto(sock, (char*) message, sizeof(message), 0, (sockaddr*) &to, sizeof(to));
-    if (flag>0) {
-        return true;
-    }
-    return false;
-}
-
-int TcpSocket::ReceiveFrom(void* buffer, int buflen, char* fromIP, UINT& fromPort)
-{
-    sockaddr_in from = {AF_INET};
-    socklen_t len = sizeof(from);
-    int size = recvfrom(sock, (char*) buffer, buflen, 0, (sockaddr*) &from, &len);
-    if (size<0)
-        return 0;
-    if (size>0) {
-        strcpy(fromIP, inet_ntoa(from.sin_addr));
-        fromPort = ntohs(from.sin_port);
-    }
-    return size;
+    return flag<0 ? false : true;
 }
 
 bool TcpSocket::Listen(int backlog)
@@ -84,11 +43,20 @@ bool TcpSocket::Listen(int backlog)
     return true;
 }
 
-bool TcpSocket::Accept(TcpSocket& socka, char* fromIP, UINT& fromPort)
+int TcpSocket::Receive(void* buffer, int bufLen)
+{
+    return recv(sock, (LPSTR) buffer, bufLen, 0);
+}
+
+
+
+
+
+bool TcpSocket::Accept(TcpSocket& clientSock, char* fromIP, UINT& fromPort)
 {
     sockaddr_in from = {AF_INET};
     socklen_t len = sizeof(from);
-    socka.sock = accept(sock, (sockaddr*) &from, &len);
+    clientSock.sock = accept(sock, (sockaddr*) &from, &len);
     strcpy(fromIP, inet_ntoa(from.sin_addr));
     fromPort = htons(from.sin_port);
     return true;
@@ -113,7 +81,7 @@ bool TcpSocket::GetPeerName(char* peerIP, UINT& peerPort)
     return true;;
 }
 
-bool TcpSocket::Connect(char* conIP, UINT conPort)
+bool TcpSocket::Connect(const char* conIP, const UINT conPort)
 {
     sockaddr_in conAddr = {AF_INET};
 #ifdef _WIN32
@@ -125,9 +93,7 @@ bool TcpSocket::Connect(char* conIP, UINT conPort)
     conAddr.sin_port = htons(conPort);
     socklen_t len = sizeof(conAddr);
     int flag = connect(sock, (sockaddr*) &conAddr, len);
-    if (flag<0)
-        return false;
-    return true;
+    return flag < 0 ? false : true ;
 }
 
 bool TcpSocket::CloseSocket()
@@ -140,3 +106,8 @@ bool TcpSocket::CloseSocket()
 #endif
     return true;
 }
+int TcpSocket::GetSocket() const
+{
+    return sock;
+}
+

@@ -20,28 +20,23 @@ typedef unsigned int UINT;
 typedef const char* LPCSTR;
 typedef char* LPSTR;
 const int SOCKET_ERROR = -1;
-unsigned int GetLastError();
+int GetLastError();
 #endif
 
 class TcpSocket {
     SOCKET sock;
 public:
 
-    TcpSocket();s
+    TcpSocket();
     ~TcpSocket();
     bool CreateSocket(int af = AF_INET, int type = SOCK_STREAM, int prot = 0);
-    int Receive(void* buffer, int buflen);
-    bool Sendto(const void* message, const char* toIP, const UINT toPort);
-    int ReceiveFrom(void* buffer, int buflen, char* fromIP, UINT& fromPort);
+    int Receive(void* buffer, int bufLen);
     bool Listen(int backlog = 5);
-    bool Accept(TcpSocket& socka, char* fromIP, UINT& fromPort);
-    size_t Send(void* message, int buflen);
+    bool Accept(TcpSocket& client_sock, char* fromIP, UINT& fromPort);
+    size_t Send(void* message, int bufLen);
     bool GetPeerName(char* peerIP, UINT& peerPort);
-    bool Connect(char* conIP, UINT conPort);
+    bool Connect(const char* conIP,const  UINT conPort);
     bool CloseSocket();
-    int GetSocket() const
-    {
-        return sock;
-    }
+    int GetSocket() const;
 };
 #endif //_TCP_SOCKET_H_

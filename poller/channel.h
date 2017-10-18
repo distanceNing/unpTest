@@ -1,5 +1,5 @@
-#ifndef _CHINELL_H_
-#define _CHINELL_H_
+#ifndef _CHANELL_H_
+#define _CHANELL_H_
 #include <boost/utility.hpp>
 
 typedef void (* EventCallBack)(int fd);
@@ -39,13 +39,13 @@ public:
         revents_ = revents;
     }
 
-    int getEvents() const
+    short getEvents() const
     {
         return events_;
     }
     void handleEvent();
 
-    int getFd() const
+    short getFd() const
     {
         return fd_;
     }
@@ -55,10 +55,10 @@ public:
 private:
 
     const int fd_;
-    int events_;
-    int revents_;
+    short events_;
+    short revents_;
     EventCallBack writeCallBack_;
     EventCallBack readCallBack_;
     EventCallBack errorCallBack_;
 };
-#endif//!_CHINELL_H_
+#endif//!_CHANELL_H_
