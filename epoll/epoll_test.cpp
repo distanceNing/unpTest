@@ -27,20 +27,27 @@ ERROR_TYPE epollHandleConnect(int listenFd)
 
     if (flag<0)
         printErrorMsg("epoll _ctl");
+
     EpollEventList epollEventList(INIT_SIZE);
     std::vector<int> clientFdList;
     char recv_buf[BUF_SIZE];
-    while (true) {
-        int ready_num = epoll_wait(epoll_fd, epollEventList.data(), epollEventList.size(), MAYBE_TIME_OUT);
-        if (ready_num==0) {
+
+    while (true)
+    {
+        int ready_num = epoll_wait(epoll_fd, epollEventList.data(), static_cast<int>(epollEventList.size()), MAYBE_TIME_OUT);
+
+        if (ready_num==0)
+        {
             std::cout << "No Event Happened --- \n";
             continue;
         }
+
         //当返回的准备好的事件和pollEventList的长度相同时,进行扩充.
         if(epollEventList.size() == ready_num)
         {
             epollEventList.resize(epollEventList.size()*2);
         }
+
         //处理文件描述符上发生的事件
         for (int i = 0; i<ready_num; ++i)
         {
@@ -50,12 +57,13 @@ ERROR_TYPE epollHandleConnect(int listenFd)
                 __socklen_t clilen = sizeof(cliaddr);
                 int connfd;
                 if ((connfd = accept(listenFd, (struct sockaddr*) &cliaddr, &clilen))<0) {
-                    perror("accept error");
-                    return -1;
+                    printErrorMsg("accept");
                 }
+
                 memset(connIP, '\0', 32);
                 strcpy(connIP, inet_ntoa(cliaddr.sin_addr));
                 printf("connect IP: %s ------ Port: %d\n", connIP, ntohs(cliaddr.sin_port));
+
                 //将新连接的文件描述符加入到pollArray
                 clientFdList.push_back(connfd);
                 setFdNonBlocking(connfd);
@@ -65,9 +73,20 @@ ERROR_TYPE epollHandleConnect(int listenFd)
             else
             {
                 memset(recv_buf, 0, BUF_SIZE);
-                size_t read_size = read(epollEventList[i].data.fd, recv_buf, BUF_SIZE);
+                ssize_t read_size = read(epollEventList[i].data.fd, recv_buf, BUF_SIZE);
                 if (read_size==0)
                 {
+                    epoll_ctl(epoll_fd,EPOLL_CTL_DEL,epollEventList[i].data.fd,NULL);
+                    for(auto ite = clientFdList.begin();ite!=clientFdList.end();++ite)
+                    {
+                        if(*ite == epollEventList[i].data.fd)
+                        {
+                            clientFdList.erase(ite);
+                            break;
+                        }
+                    }
+                    //关闭client socket
+                    close(epollEventList[i].data.fd);
                     std::cout << "client fd " << epollEventList[i].data.fd << " close --\n";
                 }
                 else if (read_size>0)
