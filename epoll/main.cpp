@@ -6,7 +6,6 @@ int main()
 {
     TcpSocket listenSock;
     listenSock.CreateSocket(AF_INET,SOCK_STREAM,kPort);
-    setFdNonBlocking(listenSock.GetSocket());
     listenSock.Listen();
 
     epollHandleConnect(listenSock.GetSocket());

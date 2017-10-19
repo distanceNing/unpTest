@@ -43,8 +43,6 @@ vector
 -
 
 /mnt/hgfs/shared/unpTest/epoll/main.cpp
-iostream
--
 epoll_test.h
 /mnt/hgfs/shared/unpTest/epoll/epoll_test.h
 tcp_socket.h

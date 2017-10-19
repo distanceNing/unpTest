@@ -14,13 +14,14 @@
 
 ERROR_TYPE epollHandleConnect(int listenFd)
 {
-    struct epoll_event event;
+
     setFdNonBlocking(listenFd);
-    char connIP[32] = {'\0'};
+
     int epoll_fd = epoll_create1(EPOLL_FLAGS);
     if (epoll_fd<0)
         printErrorMsg("epoll create");
 
+    struct epoll_event event;
     event.data.fd = listenFd;
     event.events = EPOLLIN | EPOLLET;
     int flag = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, listenFd, &event);
@@ -30,7 +31,8 @@ ERROR_TYPE epollHandleConnect(int listenFd)
 
     EpollEventList epollEventList(INIT_SIZE);
     std::vector<int> clientFdList;
-    char recv_buf[BUF_SIZE];
+    char recv_buf[BUF_SIZE]={'\0'};
+    char connIP[32] = {'\0'};
 
     while (true)
     {
@@ -64,7 +66,7 @@ ERROR_TYPE epollHandleConnect(int listenFd)
                 strcpy(connIP, inet_ntoa(cliaddr.sin_addr));
                 printf("connect IP: %s ------ Port: %d\n", connIP, ntohs(cliaddr.sin_port));
 
-                //将新连接的文件描述符加入到pollArray
+                //将新连接的文件描述符加入到clienArray
                 clientFdList.push_back(connfd);
                 setFdNonBlocking(connfd);
                 event.data.fd = connfd;
@@ -102,6 +104,7 @@ ERROR_TYPE epollHandleConnect(int listenFd)
         }
 
     }
-
+    close(epoll_fd);
+    close(listenFd);
     return 0;
 }
