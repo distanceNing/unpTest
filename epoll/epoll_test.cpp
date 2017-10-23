@@ -18,7 +18,7 @@ ERROR_TYPE epollHandleConnect(int listenFd)
     setFdNonBlocking(listenFd);
 
     int epoll_fd = epoll_create1(EPOLL_FLAGS);
-    if (epoll_fd<0)
+    if (epoll_fd < 0)
         printErrorMsg("epoll create");
 
     struct epoll_event event;
@@ -37,21 +37,26 @@ ERROR_TYPE epollHandleConnect(int listenFd)
     while (true)
     {
         int ready_num = epoll_wait(epoll_fd, epollEventList.data(), static_cast<int>(epollEventList.size()), MAYBE_TIME_OUT);
-
-        if (ready_num==0)
+        
+        if(ready_num < 0)
+        {
+            printErrorMsg("epoll_wait");
+        }
+        
+        if (ready_num == 0)
         {
             std::cout << "No Event Happened --- \n";
             continue;
         }
 
         //当返回的准备好的事件和pollEventList的长度相同时,进行扩充.
-        if(epollEventList.size() == ready_num)
+        if(epollEventList.size() == static_cast<unsigned long>(ready_num))
         {
             epollEventList.resize(epollEventList.size()*2);
         }
 
         //处理文件描述符上发生的事件
-        for (int i = 0; i<ready_num; ++i)
+        for (int i = 0; i < ready_num; ++i)
         {
             if (epollEventList[i].data.fd==listenFd)
             {
@@ -61,11 +66,11 @@ ERROR_TYPE epollHandleConnect(int listenFd)
                 if ((connfd = accept(listenFd, (struct sockaddr*) &cliaddr, &clilen))<0) {
                     printErrorMsg("accept");
                 }
-
+                
                 memset(connIP, '\0', 32);
                 strcpy(connIP, inet_ntoa(cliaddr.sin_addr));
                 printf("connect IP: %s ------ Port: %d\n", connIP, ntohs(cliaddr.sin_port));
-
+                
                 //将新连接的文件描述符加入到clienArray
                 clientFdList.push_back(connfd);
                 setFdNonBlocking(connfd);
@@ -100,7 +105,6 @@ ERROR_TYPE epollHandleConnect(int listenFd)
                     printErrorMsg("read");
                 }
             }
-
         }
 
     }
