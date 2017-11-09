@@ -8,40 +8,69 @@
 
 #include "socket_buf.h"
 #include <assert.h>
-bool net::SocketBuf::readBytes(char* data, size_t bytes)
+
+namespace net{
+
+bool net::SocketBuf::read(char* data, size_t bytes)
 {
     assert(data != NULL && bytes >= 0);
     if(bytes > readableBytes())
         return false;
-    std::copy(dataVec_.data()+readIndex_,dataVec_.data()+readIndex_+bytes,data);
+	memcpy(data, readBegin(), bytes);
     readIndex_ += bytes;
     return true;
 }
 
-bool net::SocketBuf::readBytes(net::SocketBuf & buf, size_t bytes)
+bool net::SocketBuf::read(net::SocketBuf & buf, size_t bytes)
 {
 	assert(bytes >= 0);
 	if (bytes > readableBytes())
 		return false;
-	return buf.writeBytes(dataVec_.data() + readIndex_, bytes);;
-}
-
-bool net::SocketBuf::writeBytes(const char* data, size_t len)
-{
-	assert(data != NULL&&len > 0);
-	if (len > writeableBytes()) 
-		 return false;
-	std::copy(data, data + len, &*dataVec_.begin() + writeIndex_);
-	writeIndex_ += len;
+	read(buf.writeBegin(), bytes);
+	buf.writeIndex_ += bytes;
 	return true;
 }
 
-bool net::SocketBuf::writeBytes(net::SocketBuf & buf, size_t bytes)
+void net::SocketBuf::write(const char* data, size_t len)
+{
+	assert(data != NULL&&len > 0);
+	if (len > writeableBytes())
+	{
+		grow(len);
+	}
+	memcpy(buffer_+writeIndex_, data,len);
+	writeIndex_ += len;
+}
+
+bool net::SocketBuf::write(net::SocketBuf & buf, size_t bytes)
 { 
 	assert(bytes> 0);
 	if (bytes > writeableBytes())
 		return false;
-	writeBytes(buf.dataVec_.data() + buf.readIndex_, bytes);
-	buf.writeIndex_ -= bytes;
+	write(buf.readBegin(), bytes);
+	buf.readIndex_ += bytes;
 	return true;
 }
+
+void SocketBuf::grow(size_t len)
+{
+	if (writeableBytes() + prependBytes() < len + kPrepend)
+	{
+		int size = capacity_*kGrowthFactor + len;
+		char* buf = new char[size];
+		assert(buf != NULL);
+		memcpy(buf, buffer_, capacity_);
+		delete[] buffer_;
+		buffer_ = buf;
+		capacity_ =size ;
+	}
+	else
+	{
+		size_t readable = readableBytes();
+		memmove(begin() + kPrepend, readBegin(), readable);
+		readIndex_ = kPrepend;
+		writeIndex_ = readIndex_ + readable;
+	}
+}
+
+}//namespace net

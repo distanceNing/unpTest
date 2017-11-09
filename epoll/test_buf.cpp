@@ -3,13 +3,14 @@
 int main()
 {
 	net::SocketBuf buf,buf2;
-	char* temp = "hello world";
+	char* temp = "hello world lizhichao shi shabi";
 	char buffer[1024] = { '\0' };
-	std::string str(2048, '\a');
-	buf.writeBytes(str.data(), str.size());
-	buf.writeBytes(temp, strlen(temp));
-	buf.readBytes(buffer, 10);
-	buf.readBytes(buf2, 1);
-	buf.writeBytes(buf2, 1);
+	std::string str(1024, 'a');
+	buf.append(str);
+	
+	buf.read(buffer, 1023);
+	buf.write(temp, strlen(temp));
+	buf.read(buffer, 23);
+	int32_t num = buf.readInt32();
 	return 0;
 }
