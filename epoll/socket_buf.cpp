@@ -56,7 +56,7 @@ void SocketBuf::grow(size_t len)
 {
 	if (writeableBytes() + prependBytes() < len + kPrepend)
 	{
-		int size = capacity_*kGrowthFactor + len;
+		int size = static_cast<int>(capacity_*kGrowthFactor + len);
 		char* buf = new char[size];
 		assert(buf != NULL);
 		memcpy(buf, buffer_, capacity_);

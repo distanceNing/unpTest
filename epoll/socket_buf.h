@@ -6,8 +6,8 @@
 // Copyright (c) yangning All rights reserved.
 //
 
-#ifndef EPOLL_SOCKETBUF_H
-#define EPOLL_SOCKETBUF_H
+#ifndef BASE_NET_LIB_SOCKETBUF_H
+#define BASE_NET_LIB_SOCKETBUF_H
 
 #include <vector>
 #include <string>
@@ -66,7 +66,7 @@ public:
 		capacity_ = 0;
 	}
 private:
-	const int kGrowthFactor = 1.5;
+	const float kGrowthFactor = 1.5;
 
 	void grow(size_t len);
 
@@ -125,4 +125,4 @@ private:
 
 } //namespace net
 
-#endif //EPOLL_SOCKETBUF_H
+#endif //BASE_NET_LIB_SOCKETBUF_H
