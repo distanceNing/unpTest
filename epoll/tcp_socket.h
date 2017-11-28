@@ -1,13 +1,7 @@
-#ifndef _TCP_SOCKET_H_
-#define _TCP_SOCKET_H_
+#ifndef _BASE_NET_LIB_SOCKET_FD_H_
+#define _BASE_NET_LIB_SOCKET_FD_H_
 
-#ifdef _WIN32
-#define _WINSOCK_DEPRECATED_NO_WARNINGS
-#include <WinSock2.h>
-#pragma comment (lib,"ws2_32.lib")
-typedef int socklen_t;
 
-#else
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -15,28 +9,35 @@ typedef int socklen_t;
 #include <unistd.h>
 #include <string.h>
 
-typedef int SOCKET;
-typedef unsigned int UINT;
-typedef const char* LPCSTR;
-typedef char* LPSTR;
-const int SOCKET_ERROR = -1;
 int GetLastError();
-#endif
 
-class TcpSocket {
-    SOCKET sock;
+class SocketFd {
+protected:
+    typedef unsigned int UINT;
+    const int SOCKET_ERROR = -1;
 public:
+    SocketFd(){}
 
-    TcpSocket();
-    ~TcpSocket();
-    bool CreateSocket(int af = AF_INET, int type = SOCK_STREAM, int prot = 0);
-    int Receive(void* buffer, int bufLen);
-    bool Listen(int backlog = 5);
-    bool Accept(TcpSocket& client_sock, char* fromIP, UINT& fromPort);
-    size_t Send(void* message, int bufLen);
+    virtual ~SocketFd();
+
+
+    bool CreateSocket(int port = 0,int af = AF_INET, int type = SOCK_STREAM);
+
+    ssize_t Receive(void* buffer, size_t bufLen);
+
+    void Listen(int backlog = 5);
+
+    int Accept( char* fromIP, UINT& fromPort);
+
+    ssize_t Send(void* message, size_t bufLen);
+
     bool GetPeerName(char* peerIP, UINT& peerPort);
+
     bool Connect(const char* conIP,const  UINT conPort);
-    bool CloseSocket();
-    int GetSocket() const;
+
+    int getFd() const;
+private:
+    int fd_;
+
 };
-#endif //_TCP_SOCKET_H_
+#endif //_BASE_NET_LIB_SOCKET_FD_H_

@@ -12,13 +12,14 @@ void printErrorMsg(const char* msg)
     exit(EXIT_FAILURE);
 }
 
-bool setFdNonBlocking(int fd)
+int setFdNonBlocking(int fd)
 {
+    int old_opt=fcntl(fd,F_GETFL);
     int flag = fcntl(fd,F_SETFL,O_NONBLOCK);
     if(flag == -1)
     {
        printErrorMsg("setFdNonBlocking");
     }
-    return true;
+    return old_opt;
 }
 

@@ -8,7 +8,12 @@
 #include <sys/epoll.h>
 
 #include <vector>
-
+#include <iostream>
+#include <map>
+#include "common.h"
+#include <functional>
+#include <sys/socket.h>
+#include <cstring>
 #define INIT_SIZE 16
 
 #define BUF_SIZE 1024
@@ -19,7 +24,35 @@
 
 typedef int ERROR_TYPE;
 
-using EpollEventList=std::vector<struct epoll_event>;
+class Epoll{
+public:
+    using EpollEventList=std::vector<struct epoll_event>;
+    using EventCallBack=std::function<void()>;
+    using FdMap =std::map<int,EventCallBack>;
+
+    Epoll():epollEventList_(INIT_SIZE),epoll_fd_(epoll_create1(EPOLL_FLAGS)){
+        if (epoll_fd_ < 0)
+            printErrorMsg("epoll create");
+    }
+
+    void addNewFd(int fd,EventCallBack& cb);
+
+    void removeFd(int fd);
+
+    void epollWait();
+
+    int getEpollFd()const
+    {
+        return epoll_fd_;
+    }
+
+private:
+    void handleEvent(int ready_num);
+    int epoll_fd_;
+    FdMap fd_map_;
+    EpollEventList epollEventList_;
+};
+
 
 ERROR_TYPE epollHandleConnect( int listenFd);
 

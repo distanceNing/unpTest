@@ -1,77 +1,58 @@
 #include "tcp_socket.h"
+#include <iostream>
 
-#ifndef _WIN32
-int GetLastError()
+
+bool SocketFd::CreateSocket( int port,int af, int type)
 {
-    return errno;
-}
-#endif // !_WIN32
-
-TcpSocket::TcpSocket()
-{
-    sock = -1;
-#ifdef _WIN32
-    WSADATA iData = { 0 };
-    int iResult = WSAStartup(0x0202, &iData);
-#endif // !_WIN32
-
-}
-
-TcpSocket::~TcpSocket()
-{
-#ifdef _WIN32
-    closesocket(sock);
-
-#else
-    close(sock);
-#endif
-}
-
-bool TcpSocket::CreateSocket(int af, int type, int prot)
-{
-    sock = socket(af, type, 0);
-    if (sock==SOCKET_ERROR)
+    fd_ = socket(af, type, 0);
+    if (fd_==SOCKET_ERROR)
         return false;
-    sockaddr_in sa = {af, htons(prot)};
-    int flag = bind(sock, (sockaddr*) &sa, sizeof(sa));
-    return flag<0 ? false : true;
+    sockaddr_in sa ;
+    memset(&sa,0,sizeof(struct sockaddr_in));
+    sa.sin_family=AF_INET;
+    sa.sin_port=htons(static_cast<uint16_t>(port));
+
+    int flag = bind(fd_, (sockaddr*) &sa, sizeof(sa));
+    return flag >= 0 ;
 }
 
-bool TcpSocket::Listen(int backlog)
+void SocketFd::Listen(int backlog)
 {
-    listen(sock, backlog);
-    return true;
+    listen(fd_, backlog);
 }
 
-int TcpSocket::Receive(void* buffer, int bufLen)
+ssize_t SocketFd::Receive(void* buffer, size_t buf_len)
 {
-    return recv(sock, (LPSTR) buffer, bufLen, 0);
+    return recv(fd_, static_cast<char*>(buffer), buf_len, 0);
 }
 
-
-
-
-
-bool TcpSocket::Accept(TcpSocket& clientSock, char* fromIP, UINT& fromPort)
+int SocketFd::Accept( char* fromIP, UINT& fromPort)
 {
-    sockaddr_in from = {AF_INET};
+    sockaddr_in from;
+    memset(&from,0,sizeof(struct sockaddr_in));
+    from.sin_family=AF_INET;
     socklen_t len = sizeof(from);
-    clientSock.sock = accept(sock, (sockaddr*) &from, &len);
+    int clientSock = -1;
+    if((clientSock = accept(fd_, (sockaddr*) &from, &len)) < 0 )
+        return clientSock;
     strcpy(fromIP, inet_ntoa(from.sin_addr));
     fromPort = htons(from.sin_port);
-    return true;
+    return clientSock;
 }
 
-size_t TcpSocket::Send(void* message, int buflen)
+ssize_t SocketFd::Send(void* message, size_t buf_len)
 {
-    return send(sock, (LPCSTR) message, buflen, 0);
+    return send(fd_, static_cast<char*>(message) , buf_len, 0);
 }
 
-bool TcpSocket::GetPeerName(char* peerIP, UINT& peerPort)
+bool SocketFd::GetPeerName(char* peerIP, UINT& peerPort)
 {
-    sockaddr_in from = {AF_INET};
+    sockaddr_in from;
+    memset(&from,0,sizeof(struct sockaddr_in));
+    from.sin_family=AF_INET;
     socklen_t len = sizeof(from);
-    if (getpeername(sock, (sockaddr*) &from, &len)<0) {
+    if (getpeername(fd_, (sockaddr*) &from, &len)<0)
+    {
         return false;
     }
     else {
@@ -81,33 +62,26 @@ bool TcpSocket::GetPeerName(char* peerIP, UINT& peerPort)
     return true;;
 }
 
-bool TcpSocket::Connect(const char* conIP, const UINT conPort)
+bool SocketFd::Connect(const char* conIP, const UINT conPort)
 {
     sockaddr_in conAddr = {AF_INET};
-#ifdef _WIN32
-    conAddr.sin_addr.S_un.S_addr = inet_addr(conIP);
-
-#else
     conAddr.sin_addr.s_addr = inet_addr(conIP);
-#endif
-    conAddr.sin_port = htons(conPort);
+    conAddr.sin_port = htons(static_cast<uint16_t>(conPort));
     socklen_t len = sizeof(conAddr);
-    int flag = connect(sock, (sockaddr*) &conAddr, len);
-    return flag < 0 ? false : true ;
+    int flag = connect(fd_, (sockaddr*) &conAddr, len);
+    return flag >= 0;
 }
 
-bool TcpSocket::CloseSocket()
-{
-#ifdef _WIN32
-    closesocket(sock);
 
-#else
-    close(sock);
-#endif
-    return true;
-}
-int TcpSocket::GetSocket() const
+SocketFd::~SocketFd()
 {
-    return sock;
+    close(fd_);
 }
+int SocketFd::getFd() const
+{
+    return fd_;
+}
+
+
+
 

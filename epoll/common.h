@@ -8,6 +8,6 @@ const int kPort=9000;
 
 void printErrorMsg(const char* msg);
 
-bool setFdNonBlocking(int fd);
+int  setFdNonBlocking(int fd);
 
 #endif //EPOLL_COMMON_H
