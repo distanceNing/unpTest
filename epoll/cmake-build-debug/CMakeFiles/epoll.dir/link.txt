@@ -1,1 +1,0 @@
-/usr/bin/c++   -g   CMakeFiles/epoll.dir/main.cpp.o CMakeFiles/epoll.dir/epoll_test.cpp.o CMakeFiles/epoll.dir/common.cpp.o CMakeFiles/epoll.dir/tcp_socket.cpp.o  -o epoll 
