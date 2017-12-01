@@ -1,5 +1,7 @@
 #include "tcp_socket.h"
+#include "../common.h"
 #include <cstdint>
+#include <iostream>
 namespace net {
 bool TcpSocket::CreateSocket(int port, int af, int type)
 {
@@ -86,6 +88,8 @@ bool TcpSocket::Connect(const char* conIP, const UINT conPort)
 
 TcpSocket::~TcpSocket()
 {
+    //std::cout<<"fd "<<fd_<<" closed---"<<std::endl;
+    //closeFd();
 }
 int TcpSocket::getFd() const
 {
@@ -114,6 +118,31 @@ ssize_t TcpSocket::read_n(void* msg, size_t buf_len)
             break;
     }
     return recv_size;
+}
+int TcpSocket::create_and_bind(int port, int af, int type)
+{
+    int fd;
+    fd = socket(af, type, 0);
+    if (fd < 0)
+        printErrorMsg("socket");
+    int on = 1;
+    //address already use
+    if ((setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on))) < 0) {
+        printErrorMsg("setsockopt");
+    }
+    sockaddr_in sa;
+    memset(&sa, 0, sizeof(struct sockaddr_in));
+    sa.sin_family = AF_INET;
+    sa.sin_port = htons(static_cast<uint16_t>(port));
+    if (bind(fd, (sockaddr*) &sa, sizeof(sa)) < 0)
+        printErrorMsg("bind");
+    return fd;
+}
+void TcpSocket::setTcpNoDelay()
+{
+    int on = 1;
+    if(setsockopt( fd_, IPPROTO_TCP, TCP_NODELAY, (void *)&on, sizeof(on)))
+        printErrorMsg("setsockpot");
 }
 }//namespace net
 
