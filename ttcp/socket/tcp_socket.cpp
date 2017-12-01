@@ -6,10 +6,10 @@ namespace net {
 bool TcpSocket::CreateSocket(int port, int af, int type)
 {
     fd_ = socket(af, type, 0);
-    if (fd_ < 0)
+    if ( fd_ < 0 )
         return false;
     int on = 1;
-    if ((setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on))) < 0) {
+    if ((setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on))) < 0 ) {
         return false;
     }
     sockaddr_in sa;
@@ -28,6 +28,7 @@ void TcpSocket::Listen(int backlog)
 
 ssize_t TcpSocket::Receive(void* buffer, size_t buf_len)
 {
+    assert(buffer != NULL);
     return recv(fd_, static_cast<char*>(buffer), buf_len, 0);
 }
 
@@ -41,12 +42,13 @@ ssize_t TcpSocket::Receive(net::SocketBuf& buf)
 int TcpSocket::Accept(char* fromIP, UINT& fromPort)
 {
     assert(fromIP != NULL);
+    assert(fromIP != NULL);
     sockaddr_in from;
     memset(&from, 0, sizeof(struct sockaddr_in));
     from.sin_family = AF_INET;
     socklen_t len = sizeof(from);
     int clientSock = -1;
-    if ((clientSock = accept(fd_, (sockaddr*) &from, &len)) < 0)
+    if ((clientSock = accept(fd_, (sockaddr*) &from, &len)) < 0 )
         return clientSock;
     strcpy(fromIP, inet_ntoa(from.sin_addr));
     fromPort = htons(from.sin_port);
@@ -55,16 +57,18 @@ int TcpSocket::Accept(char* fromIP, UINT& fromPort)
 
 ssize_t TcpSocket::Send(const void* message, size_t buf_len)
 {
-    return send(fd_, message, buf_len, 0);
+    assert(message != NULL);
+    return send(fd_, message, buf_len, MSG_NOSIGNAL);
 }
 
 bool TcpSocket::GetPeerName(char* peerIP, UINT& peerPort)
 {
+    assert(peerIP != NULL);
     sockaddr_in from;
     memset(&from, 0, sizeof(struct sockaddr_in));
     from.sin_family = AF_INET;
     socklen_t len = sizeof(from);
-    if (getpeername(fd_, (sockaddr*) &from, &len) < 0) {
+    if ( getpeername(fd_, (sockaddr*) &from, &len) < 0 ) {
         return false;
     }
     else {
@@ -76,6 +80,7 @@ bool TcpSocket::GetPeerName(char* peerIP, UINT& peerPort)
 
 bool TcpSocket::Connect(const char* conIP, const UINT conPort)
 {
+    assert(conIP != NULL);
     sockaddr_in conAddr;
     memset(&conAddr, 0, sizeof(struct sockaddr_in));
     conAddr.sin_family = AF_INET;
@@ -88,8 +93,7 @@ bool TcpSocket::Connect(const char* conIP, const UINT conPort)
 
 TcpSocket::~TcpSocket()
 {
-    //std::cout<<"fd "<<fd_<<" closed---"<<std::endl;
-    //closeFd();
+    closeFd();
 }
 int TcpSocket::getFd() const
 {
@@ -99,10 +103,9 @@ ssize_t TcpSocket::write_n(const void* msg, size_t buf_len)
 {
     ssize_t send_size = 0;
     ssize_t a_send_size;
-    while ((a_send_size = ::write(fd_,(char*)msg+send_size, buf_len-send_size)) > 0)
-    {
+    while ((a_send_size = ::write(fd_, (char*) msg + send_size, buf_len - send_size)) > 0) {
         send_size += a_send_size;
-        if (send_size == buf_len)
+        if ( send_size == buf_len )
             break;
     }
     return send_size;
@@ -111,10 +114,9 @@ ssize_t TcpSocket::read_n(void* msg, size_t buf_len)
 {
     ssize_t recv_size = 0;
     ssize_t a_recv_size;
-    while ((a_recv_size = ::read(fd_,(char*)msg + recv_size, buf_len-recv_size)) > 0)
-    {
+    while ((a_recv_size = ::read(fd_, (char*) msg + recv_size, buf_len - recv_size)) > 0) {
         recv_size += a_recv_size;
-        if (recv_size == buf_len )
+        if ( recv_size == buf_len )
             break;
     }
     return recv_size;
@@ -123,25 +125,25 @@ int TcpSocket::create_and_bind(int port, int af, int type)
 {
     int fd;
     fd = socket(af, type, 0);
-    if (fd < 0)
+    if ( fd < 0 )
         printErrorMsg("socket");
     int on = 1;
     //address already use
-    if ((setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on))) < 0) {
+    if ((setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on))) < 0 ) {
         printErrorMsg("setsockopt");
     }
     sockaddr_in sa;
     memset(&sa, 0, sizeof(struct sockaddr_in));
     sa.sin_family = AF_INET;
     sa.sin_port = htons(static_cast<uint16_t>(port));
-    if (bind(fd, (sockaddr*) &sa, sizeof(sa)) < 0)
+    if ( bind(fd, (sockaddr*) &sa, sizeof(sa)) < 0 )
         printErrorMsg("bind");
     return fd;
 }
 void TcpSocket::setTcpNoDelay()
 {
     int on = 1;
-    if(setsockopt( fd_, IPPROTO_TCP, TCP_NODELAY, (void *)&on, sizeof(on)))
+    if ( setsockopt(fd_, IPPROTO_TCP, TCP_NODELAY, (void*) &on, sizeof(on)))
         printErrorMsg("setsockpot");
 }
 }//namespace net

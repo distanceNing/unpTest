@@ -5,7 +5,10 @@
 #ifndef BASE_NET_LIB_TIMESTAMP_H
 #define BASE_NET_LIB_TIMESTAMP_H
 
-#include <time.h>
+#include <sys/time.h>
+#include <cstdint>
+#include <ctime>
+
 namespace net {
 class TimeStamp {
 
@@ -13,7 +16,7 @@ public:
     using PassingTime=time_t;
 
     TimeStamp()
-            :time_(time(0))
+            :time_((int64_t)time(0))
     {
     }
 
@@ -28,7 +31,7 @@ public:
     }
 
 private:
-    time_t time_;
+    int64_t time_;
 };
 }//namespace net
 #endif //!BASE_NET_LIB_TIMESTAMP_H

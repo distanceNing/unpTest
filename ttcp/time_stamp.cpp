@@ -3,11 +3,17 @@
 //
 
 #include "time_stamp.h"
-#include <cstdio>
+#include "common.h"
+
+
 namespace net {
 void TimeStamp::printTime()
 {
     struct tm* tm = localtime(&time_);
+    struct timeval tm_val;
+    if(gettimeofday(&tm_val,0)<0)
+        printErrorMsg("gettimeofday");
+
     printf("Time is :%d : %d : %d \n", tm->tm_hour, tm->tm_min, tm->tm_sec);
 }
 

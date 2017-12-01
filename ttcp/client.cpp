@@ -12,12 +12,13 @@
 #include "time_stamp.h"
 int main(int argc, char** argv)
 {
-    net::TimeStamp start_time;
+    int64_t start_time=nowTime();
     start_time.printTime();
     if (argc < 2) {
         std::cout << "need server ip , buffer length ,loop number\n";
         return EXIT_FAILURE;
     }
+    int pipelining = 2;
     SessionInfo session_info = {0, 0};
     session_info.number = atoi(argv[2]);
     session_info.length = atoi(argv[3]);
@@ -41,24 +42,36 @@ int main(int argc, char** argv)
     size_t a_send_size;
     int ack = 0;
     size_t total_send_size = 0;
-    for (int i = 0; i < session_info.number; ++i)
+    for (int i = 0; i < pipelining; ++i)
     {
+        if (sock.write_n(payload_info, payload_size) != payload_size) {
+            printErrorMsg("short write");
+        }
+    }
+    for (int i = 0; i < session_info.number- pipelining; ++i)
+    {
+        if(sock.Receive(&ack, sizeof(ack))!=sizeof(ack))
+        {
+            printErrorMsg("recv");
+        }
+
         if(sock.write_n(payload_info,payload_size)!=payload_size)
         {
             printErrorMsg("short write");
         }
 
+        assert(ack == session_info.length);
+    }
+
+    for (int i = 0; i < pipelining; ++i)
+    {
         if(sock.Receive(&ack, sizeof(ack))!=sizeof(ack))
         {
             printErrorMsg("recv");
         }
-        assert(ack == session_info.length);
-
-        total_send_size += send_size;
     }
-    std::cout << "send total size is " << total_send_size / (1024 * 1024) << " MB ." << std::endl;
-    net::TimeStamp end_time;
-    end_time.printTime();
+    std::cout << "total size " << (session_info.number*payload_size)/(1024*1024) << std::endl;
+    int64_t end_time=nowTime();
     time_t total_time = end_time - start_time;
     std::cout << "total time " << total_time << std::endl;
 
