@@ -6,27 +6,7 @@ static int gUserCount = 0;
 void stdincb(int fd);
 void clientRcb(int fd, Epoll& epoll);
 
-void listenRcb(int listenFd, Epoll* epoll)
-{
-    char connIP[32] = {'\0'};
-    struct sockaddr_in cliaddr;
-    socklen_t clilen = sizeof(cliaddr);
-    int connfd;
-    if ((connfd = accept(listenFd, (struct sockaddr*) &cliaddr, &clilen)) < 0 ) {
-        printErrorMsg("accept");
-    }
-
-    memset(connIP, '\0', 32);
-    strcpy(connIP, inet_ntoa(cliaddr.sin_addr));
-    printf("connect IP: %s ------ Port: %d\n", connIP, ntohs(cliaddr.sin_port));
-    ++gUserCount;
-    printf("accept -- UserCount : %d   \n", gUserCount);
-    //将新连接的文件描述符加入到clienArray
-    Epoll::EventCallBack fun = std::bind(clientRcb, connfd, *epoll);
-    epoll->addNewFd(connfd, fun);
-    Epoll::EventCallBack cb = std::bind(stdincb, connfd);
-    epoll->addNewFd(STDIN_FILENO, cb);
-}
+void listenRcb(int listenFd, Epoll* epoll);
 
 static bool isgLoop = true;
 int main(int argc, char* argv[])
@@ -78,11 +58,8 @@ void stdincb(int fd)
 {
     char buffer[MAX_BUF_SIZE] = {'\0'};
     ssize_t read_size = ::read(STDIN_FILENO, buffer, MAX_BUF_SIZE);
-    //std::string send(MAX_BUF_SIZE,'s');
     if ( read_size > 0 ) {
-        //printf("stdin read size : %d\n",(int)read_size);
-        //::write(fd,send.data(), send.size());
-        ::write(fd, buffer, read_size);
+        ::write(fd, buffer, (size_t)read_size);
     }
     else if ( read_size < 0 )
         printErrorMsg("stdin");
@@ -108,3 +85,24 @@ void clientRcb(int fd, Epoll& epoll)
     }
 }
 
+void listenRcb(int listenFd, Epoll* epoll)
+{
+    char connIP[32] = {'\0'};
+    struct sockaddr_in cliaddr;
+    socklen_t clilen = sizeof(cliaddr);
+    int connfd;
+    if ((connfd = accept(listenFd, (struct sockaddr*) &cliaddr, &clilen)) < 0 ) {
+        printErrorMsg("accept");
+    }
+
+    memset(connIP, '\0', 32);
+    strcpy(connIP, inet_ntoa(cliaddr.sin_addr));
+    printf("connect IP: %s ------ Port: %d\n", connIP, ntohs(cliaddr.sin_port));
+    ++gUserCount;
+    printf("accept -- UserCount : %d   \n", gUserCount);
+    //将新连接的文件描述符加入到clienArray
+    Epoll::EventCallBack fun = std::bind(clientRcb, connfd, *epoll);
+    epoll->addNewFd(connfd, fun);
+    Epoll::EventCallBack cb = std::bind(stdincb, connfd);
+    epoll->addNewFd(STDIN_FILENO, cb);
+}

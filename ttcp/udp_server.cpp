@@ -7,7 +7,6 @@
 //
 #include <cstring>
 #include "common.h"
-#include <iostream>
 int main()
 {
     int sock=::socket(AF_INET,SOCK_DGRAM,0);
@@ -19,18 +18,19 @@ int main()
     local_addr.sin_port=::htons(kPort);
     if(::bind(sock,(struct sockaddr*)&local_addr,sizeof local_addr)<0)
         printErrorMsg("bind");
-
+    char buffer[MAX_BUF_SIZE];
     while (true)
     {
-        NTPInfo ntp_info;
         struct  sockaddr_in client_addr;
         socklen_t socklen=sizeof client_addr;
-        ssize_t recv_size=::recvfrom(sock,&ntp_info,sizeof ntp_info,0,(struct sockaddr*)&client_addr,&socklen);
-        printf("recv from ip: %s port: %d\n",inet_ntoa(client_addr.sin_addr),htons(client_addr.sin_port));
-        if(recv_size == sizeof ntp_info)
+        memset(buffer,0,MAX_BUF_SIZE);
+        ssize_t recv_size=::recvfrom(sock,buffer,MAX_BUF_SIZE,0,(struct sockaddr*)&client_addr,&socklen);
+        printf("recv from ip: %s port: %d  buffer is : %s\n",inet_ntoa(client_addr.sin_addr),htons(client_addr.sin_port),buffer);
+        if(recv_size>0)
         {
-            ntp_info.response=nowTime();
-            ::sendto(sock,&ntp_info,sizeof ntp_info,0,(struct sockaddr*)&client_addr,socklen);
+            memset(buffer,0,MAX_BUF_SIZE);
+            scanf("%s",buffer);
+            ::sendto(sock,buffer,strlen(buffer),0,(struct sockaddr*)&client_addr,socklen);
         }
         else if(recv_size == 0)
             printf("connection closed \n");

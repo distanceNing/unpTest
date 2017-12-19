@@ -26,6 +26,8 @@ public:
     }
     static int create_and_bind(int port = 0, int af = AF_INET, int type = SOCK_STREAM);
 
+    static bool sockConnect(int fd,const char* conn_ip,uint16_t conn_port);
+
     explicit TcpSocket(const int fd)
             :fd_(fd)
     {
@@ -43,11 +45,17 @@ public:
 
     int Accept(char* fromIP, UINT& fromPort);
 
+    ssize_t Send(net::SocketBuf& buf)
+    {
+        return ::send(fd_,buf.readBegin(),buf.readableBytes(),MSG_NOSIGNAL);
+    }
+
     ssize_t Send(const void * message, size_t bufLen);
 
     ssize_t write_n(const void* msg,size_t buf_len);
 
     ssize_t read_n(void* msg,size_t buf_len);
+
     bool GetPeerName(char* peerIP, UINT& peerPort);
 
     bool Connect(const char* conIP, const UINT conPort);

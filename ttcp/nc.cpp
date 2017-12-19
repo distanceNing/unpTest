@@ -13,7 +13,7 @@
 #include "time_stamp.h"
 int main(int argc, char** argv)
 {
-    int64_t start_time=nowTime();
+
     const char* server_ip="127.0.0.1";
     net::TcpSocket sock;
     if (!sock.CreateSocket()) {
@@ -26,17 +26,24 @@ int main(int argc, char** argv)
     ssize_t send_size;
     size_t total_send_size = 0;
     setFdNonBlocking(sock.getFd());
-    for (int i=0;;++i)
+    char send_msg[256];
+    net::SocketBuf buf;
+    net::SocketBuf read_buf;
+    int64_t start_time=nowTime();
+    for (int i=0;i<1024;++i)
     {
-
-        std::string send(65536,'s');
-        if((send_size=sock.Send(send.data(),send.size()))>0)
+        memset(send_msg,0,256);
+        sprintf(send_msg,"set yn%d 1 1 1024\r\n",i);
+        std::string data(1024,'a');
+        data+="\r\n";
+        buf.append(send_msg,strlen(send_msg));
+        buf.append(data);
+        if((send_size=sock.Send(buf))>0)
         {
-            printf("send time is %d send size is %d\n",i,send_size);
-            if(send_size != send.size())
+            printf("send time is %d send size is %d \n",i,(int)send_size);
+            if(send_size < buf.readableBytes())
             {
                 printf("short write -- \n");
-                ::usleep(1000*100);
             }
         }
         else if(send_size == 0)
@@ -45,11 +52,16 @@ int main(int argc, char** argv)
             printf("error eagain\n");
         else
             printErrorMsg("send");
+        buf.resetBuffer();
+        sock.Receive(read_buf);
+        printf("%s",read_buf.readBegin());
+        read_buf.resetBuffer();
+        ::usleep(1000);
     }
 
     int64_t end_time=nowTime();
     time_t total_time = end_time - start_time;
-    std::cout << "total time " << total_time << std::endl;
+    std::cout << "total time " << total_time/(1000) << std::endl;
 
     return 0;
 }

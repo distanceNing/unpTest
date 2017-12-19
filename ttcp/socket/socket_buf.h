@@ -28,6 +28,14 @@ public:
         buffer_ = new char[capacity_];
         memset(buffer_, 0, capacity_);
     }
+
+
+    void resetBuffer()
+    {
+        readIndex_=kPrepend;
+        writeIndex_= kPrepend;
+        memset(buffer_,0,capacity_);
+    }
     //write
 
     ssize_t readFromFd(int fd);

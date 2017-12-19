@@ -5,14 +5,25 @@
 #include "epoll_test.h"
 #include "../common.h"
 
-
+const char* hello= "hello world";
 void Epoll::handleEvent(int ready_num)
 {
     //处理文件描述符上发生的事件
-    for (int i = 0; i < ready_num; ++i)
-    {
+    for (int i = 0; i < ready_num; ++i) {
         int fd=epollEventList_[i].data.fd;
-        fd_map_.find(fd)->second();
+        struct epoll_event event =epollEventList_[i];
+        if ( event.events & EPOLLOUT )
+        {
+            //写入一些数据后,关闭对EPOLLOUT事件的关注
+            ::write(fd,hello,strlen(hello));
+            event.events=EPOLLIN;
+            epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, fd, &event);
+        }
+        else if(epollEventList_[i].events & EPOLLIN){
+
+            fd_map_.find(fd)->second();
+        }
+
     }
 }
 void Epoll::addNewFd(int fd,EventCallBack& cb)
@@ -20,7 +31,7 @@ void Epoll::addNewFd(int fd,EventCallBack& cb)
     setFdNonBlocking(fd);
     struct epoll_event event;
     event.data.fd = fd;
-    event.events = EPOLLIN;
+    event.events = EPOLLIN | EPOLLOUT;
     int flag = epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, fd, &event);
     if (flag < 0)
         printErrorMsg("epoll_ctl");

@@ -35,13 +35,13 @@ ssize_t TcpSocket::Receive(void* buffer, size_t buf_len)
 ssize_t TcpSocket::Receive(net::SocketBuf& buf)
 {
     ssize_t size = recv(fd_, buf.writeBegin(), buf.writeableBytes(), 0);
-    buf.writeSkip(size);
+    if(size > 0)
+        buf.writeSkip(static_cast<size_t>(size));
     return size;
 }
 
 int TcpSocket::Accept(char* fromIP, UINT& fromPort)
 {
-    assert(fromIP != NULL);
     assert(fromIP != NULL);
     sockaddr_in from;
     memset(&from, 0, sizeof(struct sockaddr_in));
@@ -101,6 +101,7 @@ int TcpSocket::getFd() const
 }
 ssize_t TcpSocket::write_n(const void* msg, size_t buf_len)
 {
+    assert(msg != NULL);
     ssize_t send_size = 0;
     ssize_t a_send_size;
     while ((a_send_size = ::write(fd_, (char*) msg + send_size, buf_len - send_size)) > 0) {
@@ -112,6 +113,7 @@ ssize_t TcpSocket::write_n(const void* msg, size_t buf_len)
 }
 ssize_t TcpSocket::read_n(void* msg, size_t buf_len)
 {
+    assert(msg != NULL);
     ssize_t recv_size = 0;
     ssize_t a_recv_size;
     while ((a_recv_size = ::read(fd_, (char*) msg + recv_size, buf_len - recv_size)) > 0) {
@@ -145,6 +147,18 @@ void TcpSocket::setTcpNoDelay()
     int on = 1;
     if ( setsockopt(fd_, IPPROTO_TCP, TCP_NODELAY, (void*) &on, sizeof(on)))
         printErrorMsg("setsockpot");
+}
+bool TcpSocket::sockConnect(int fd,const char* conn_ip, uint16_t conn_port)
+{
+    assert(conn_ip != NULL);
+    sockaddr_in conAddr;
+    memset(&conAddr, 0, sizeof(struct sockaddr_in));
+    conAddr.sin_family = AF_INET;
+    conAddr.sin_addr.s_addr = inet_addr(conn_ip);
+    conAddr.sin_port = htons(static_cast<uint16_t>(conn_port));
+    socklen_t len = sizeof(conAddr);
+    int flag = ::connect(fd, (sockaddr*) &conAddr, len);
+    return flag >= 0;
 }
 }//namespace net
 
