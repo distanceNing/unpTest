@@ -6,17 +6,42 @@
 // Copyright (c) yangning All rights reserved.
 //
 
-#include "socket/epoll_test.h"
+#include "socket/epoller.h"
 #include "socket/tcp_socket.h"
 #include "thread/thread_pool.h"
 #include "common.h"
+#include "benckmark.h"
 static int gUserCount = 0;
 
-void clientRcb(int fd, Epoll& epoll);
+static int concurrent_num = 1024;
 
-static int concurrent_num = 20;
+const int bufsize = 1024;
 
 static bool isgLoop = true;
+
+const int timeout = 1;
+
+typedef struct {
+  const char* server_ip_;
+  int server_port_;
+  bool is_keep_alive_;
+  size_t thread_num_;
+  size_t concurrent_num_;
+  size_t connect_timeout_ms_;
+}Option;
+
+Option gOption;
+
+void defautOption()
+{
+    gOption.server_ip_=  "127.0.0.1";
+    gOption.connect_timeout_ms_ = 3000;
+    gOption.server_port_ = 9000;
+    gOption.concurrent_num_ =1024;
+    gOption.is_keep_alive_ = true;
+    gOption.thread_num_ = 1;
+}
+
 int main(int argc, char* argv[])
 {
     //if(argc < 2)
@@ -24,48 +49,49 @@ int main(int argc, char* argv[])
     //    printf("Usage: %s [host] [port] [connection_num] \n",argv[0]);
     //    return 0;
     //}
-    const char* server_ip = "127.0.0.1"; //argv[1]
 
+    defautOption();
     ThreadPool::ThreadTask task;
-    task = [server_ip](){
+
+    task = []() {
       Epoll epoll;
+      epoll.setReadcb([](net::SocketBuf* buf,int fd){
+        //printf("%s\n",buf->readBegin());
+        char buffer[MAX_BUF_SIZE]={'\0'};
+        size_t readable=buf->readableBytes();
+        if(buf->read(buffer,readable))
+            ::write(fd,buffer,readable);
+      });
+
       for (int i = 0; i < concurrent_num; ++i)
       {
-          usleep(1000);
-          int conn_fd;
-          if ( (conn_fd=net::TcpSocket::create_and_bind())<0)
+          int conn_fd ;
+          if ((conn_fd = net::TcpSocket::create_and_bind()) < 0 )
               printErrorMsg("creat socket");
-          if ( !net::TcpSocket::sockConnect(conn_fd,server_ip,kPort))
+          if ( !setFdNonBlocking(conn_fd))
+              printErrorMsg("setFdNonBlocking");
+          if ( net::TcpSocket::noblockingConnect(conn_fd, gOption.server_ip_, kPort,gOption.connect_timeout_ms_) < 0 ) {
+              //printf("connect time out\n");
               printErrorMsg("connect");
-          printf("connect times is %d \n",i);
-          Epoll::EventCallBack fun = std::bind(clientRcb, conn_fd, epoll);
-          epoll.addNewFd(conn_fd, fun);
+          }
+          
+          printf("connect time is %d \n", i);
+          net::TcpSocket::setTcpNoDelay(conn_fd);
+          //::setsockopt(conn_fd, SOL_SOCKET, SO_SNDBUF, &bufsize, sizeof(bufsize));
+          //::setsockopt(conn_fd, SOL_SOCKET, SO_RCVBUF, &bufsize, sizeof(bufsize));
+          epoll.addNewFd(conn_fd);
+          usleep(1000);
       }
       while (isgLoop)
           epoll.epollWait();
 
     };
-    ThreadPool threadPool(task,10);
-    threadPool.run();
-    return 0;
-}
 
-void clientRcb(int fd, Epoll& epoll)
-{
-    char recv_buf[MAX_BUF_SIZE] = {'\0'};
-    ssize_t read_size = read(fd, recv_buf, MAX_BUF_SIZE);
-    if ( read_size == 0 ) {
-        epoll.removeFd(fd);
-        isgLoop = false;
-        close(fd);
-        std::cout << "client fd " << fd << " close --\n";
-    }
-    else if ( read_size > 0 ) {
-        assert(!strncmp(recv_buf,"hello world",11));
-        ::write(fd,recv_buf,(size_t)read_size);
-    }
-    else {
-        printErrorMsg("read");
-    }
+
+    ThreadPool threadPool(task, gOption.thread_num_);
+    threadPool.run();
+
+    threadPool.join();
+    return 0;
 }
 

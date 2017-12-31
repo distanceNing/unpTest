@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
     payload_info->length=session_info.length;
     if(nodelay)
     {
-        sock.setTcpNoDelay();
+       net::TcpSocket(sock.getFd());
     }
     if(buffering)
     {

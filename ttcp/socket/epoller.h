@@ -5,6 +5,7 @@
 #ifndef EPOLL_EPOLL_TEST_H
 #define EPOLL_EPOLL_TEST_H
 #include "../common.h"
+#include "socket_buf.h"
 #include <sys/epoll.h>
 #include <sys/socket.h>
 #include <vector>
@@ -12,9 +13,9 @@
 #include <map>
 #include <functional>
 #include <cstring>
-#define INIT_SIZE 16
 
-#define MAYBE_TIME_OUT -1
+
+#define MAYBE_TIME_OUT 1000
 
 #define EPOLL_FLAGS 0
 
@@ -24,28 +25,40 @@ class Epoll{
 public:
     using EpollEventList=std::vector<struct epoll_event>;
     using EventCallBack=std::function<void()>;
-    using FdMap =std::map<int,EventCallBack>;
-
-    Epoll():epollEventList_(INIT_SIZE),epoll_fd_(epoll_create1(EPOLL_FLAGS)){
+    using ReadCallBack=std::function<void(net::SocketBuf*,int)>;
+    //using FdMap =std::map<int,EventCallBack>;
+    static const int kInitSize= 1024;
+    Epoll(size_t init_size=kInitSize):epollEventList_(init_size),epoll_fd_(epoll_create1(EPOLL_FLAGS)){
         if (epoll_fd_ < 0)
             printErrorMsg("epoll create");
     }
 
-    void addNewFd(int fd,EventCallBack& cb);
+    void addNewFd(int fd);
 
     void removeFd(int fd);
 
     void epollWait();
 
+    void setReadcb(const ReadCallBack& readcb);
+
+    void setWritecb(const EventCallBack& writecb)
+    {
+        writecb_ = writecb;
+    }
     int getEpollFd()const
     {
         return epoll_fd_;
     }
 
 private:
-    void handleEvent(int ready_num);
+    void handleEvent(size_t ready_num);
+
+    void handleRead(int fd);
     int epoll_fd_;
-    FdMap fd_map_;
+    //FdMap fd_map_;
+    ReadCallBack readcb_;
+    EventCallBack writecb_;
+    net::SocketBuf socketBuf_;
     EpollEventList epollEventList_;
 };
 

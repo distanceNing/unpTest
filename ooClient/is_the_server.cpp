@@ -10,38 +10,46 @@ int IsServerIP(const char* conIP, const int conPort, const int timeout)
     conAddr.sin_addr.s_addr = inet_addr(conIP);
     conAddr.sin_port = htons(static_cast<uint16_t>(conPort));
 
-    int old_opt = setFdNonBlocking(sockClient.getFd());
-    if (old_opt == -1) {
+    if ( setFdNonBlocking(sockClient.getFd()) < 0 ) {
         printf("fcntl failed --- \n");
         return -1;
     }
     int flag = connect(sockClient.getFd(), (sockaddr*) &conAddr, sizeof(sockaddr_in));
-    if (flag == 0) {
-        fcntl(sockClient.getFd(), F_SETFL, old_opt);
+    if ( flag == 0 ) {
+        //fcntl(sockClient.getFd(), F_SETFL, old_opt);
         return 0;
     }
-    else if (errno != EINPROGRESS) {
+    else if ( errno != EINPROGRESS ) {
         return -1;
     }
-
-    fd_set set;
+    int fd = sockClient.getFd();
+    fd_set rset, wset;
     timeval tm;
+
     tm.tv_sec = timeout;
     tm.tv_usec = 0;
-    FD_ZERO(&set);
-    FD_SET(sockClient.getFd(), &set);
-    if (select(sockClient.getFd() + 1, NULL, &set, NULL, &tm) > 0) {
+    FD_ZERO(&rset);
+    wset = rset;
+    FD_SET(fd, &rset);
+    FD_SET(fd, &wset);
+    int nready = select(fd + 1, &rset, &wset, NULL, &tm);
+    if ( nready == 0 ) {
+        errno = ETIMEDOUT;
+        return -1;
+    }
+    else if ( FD_ISSET(fd, &wset) || FD_ISSET(fd, &rset)) {
         int error;
         socklen_t len = sizeof(error);
         getsockopt(sockClient.getFd(), SOL_SOCKET, SO_ERROR, &error, &len);
-        if (!error)
+        if ( !error )
             printf("is the ip %s -- port %d \n", conIP, conPort);
-        else
+        else {
+            perror("nonblocking connect");
             ret = -1;
+        }
     }
     else
-        ret = -1;
-
+        printErrorMsg("select");
     sockClient.closeFd();
     return ret;
 }

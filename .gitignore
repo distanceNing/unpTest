@@ -1,5 +1,7 @@
 */cmake-build-debug
 */.idea/
 CMake*
-
 *.o
+*.mp3
+ttcp/client
+ttcp/server

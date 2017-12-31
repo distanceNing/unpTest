@@ -16,8 +16,6 @@
 #include <cstring>
 #define INIT_SIZE 16
 
-#define BUF_SIZE 1024
-
 #define MAYBE_TIME_OUT -1
 
 #define EPOLL_FLAGS 0

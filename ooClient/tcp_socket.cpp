@@ -6,18 +6,16 @@ bool SocketFd::CreateSocket(int port, int af, int type)
 	fd_ = socket(af, type, 0);
 	if (fd_ == SOCKET_ERROR)
 		return false;
-	int on=1;
-	if((setsockopt(fd_,SOL_SOCKET,SO_REUSEADDR,&on,sizeof(on)))<0)
-	{
-		return false;
-	}
-	sockaddr_in sa;
-	memset(&sa, 0, sizeof(struct sockaddr_in));
-	sa.sin_family = AF_INET;
-	sa.sin_port = htons(static_cast<uint16_t>(port));
 
-	int flag = bind(fd_, (sockaddr*)&sa, sizeof(sa));
-	return flag >= 0;
+	int on=1;
+    return setsockopt(fd_,SOL_SOCKET,SO_REUSEADDR,&on,sizeof(on)) >= 0;
+    //sockaddr_in sa;
+	//memset(&sa, 0, sizeof(struct sockaddr_in));
+	//sa.sin_family = AF_INET;
+	//sa.sin_port = htons(static_cast<uint16_t>(port));
+
+	//int flag = bind(fd_, (sockaddr*)&sa, sizeof(sa));
+	//return flag >= 0;
 }
 
 void SocketFd::Listen(int backlog)

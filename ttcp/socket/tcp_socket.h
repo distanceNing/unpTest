@@ -28,6 +28,7 @@ public:
 
     static bool sockConnect(int fd,const char* conn_ip,uint16_t conn_port);
 
+    static int noblockingConnect(int fd,const char* conn_ip,uint16_t conn_port,size_t time_out_ms);
     explicit TcpSocket(const int fd)
             :fd_(fd)
     {
@@ -62,7 +63,7 @@ public:
 
     int getFd() const;
 
-    void setTcpNoDelay();
+    static void setTcpNoDelay(int fd);
 
     void shutDownWrite()
     {

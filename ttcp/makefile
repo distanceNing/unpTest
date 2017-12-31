@@ -1,17 +1,17 @@
-obj= epoll_test.o  tcp_socket.o socket_buf.o
+obj= epoller.o  tcp_socket.o socket_buf.o
 
 SOCKDIR =socket/
 cppstd=-std=c++11
 
 
-nodelay:$(obj) nodelay.o
-	g++     $(obj) nodelay.o -o nodelay
+#nodelay:$(obj) nodelay.o
+#	g++     $(obj) nodelay.o -o nodelay
 
-ConcurrentTest:$(obj) ConcurrentTest.o
-	g++     $(obj) ConcurrentTest.o -o ConcurrentTest
+#ConcurrentTest:$(obj) ConcurrentTest.o
+#	g++     $(obj) ConcurrentTest.o -o ConcurrentTest
 
-neccat:$(obj) neccat.o
-	g++     $(obj) neccat.o -o neccat
+#neccat:$(obj) neccat.o
+#	g++     $(obj) neccat.o -o neccat
 
 nc    :$(obj) nc.o
 	g++     $(obj) nc.o     -o nc
@@ -34,8 +34,8 @@ tcp_socket.o:$(SOCKDIR)tcp_socket.cpp
 socket_buf.o:$(SOCKDIR)socket_buf.cpp
 	g++     -c $(cppstd) $(SOCKDIR)socket_buf.cpp
 
-epoll_test.o:$(SOCKDIR)epoll_test.cpp
-	g++     -c $(cppstd) $(SOCKDIR)epoll_test.cpp
+epoller.o:$(SOCKDIR)epoller.cpp
+	g++     -c $(cppstd) $(SOCKDIR)epoller.cpp
 
 .PHONY:clean
 clean:

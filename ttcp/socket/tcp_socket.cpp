@@ -35,7 +35,7 @@ ssize_t TcpSocket::Receive(void* buffer, size_t buf_len)
 ssize_t TcpSocket::Receive(net::SocketBuf& buf)
 {
     ssize_t size = recv(fd_, buf.writeBegin(), buf.writeableBytes(), 0);
-    if(size > 0)
+    if ( size > 0 )
         buf.writeSkip(static_cast<size_t>(size));
     return size;
 }
@@ -129,26 +129,15 @@ int TcpSocket::create_and_bind(int port, int af, int type)
     fd = socket(af, type, 0);
     if ( fd < 0 )
         printErrorMsg("socket");
-    int on = 1;
-    //address already use
-    if ((setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on))) < 0 ) {
-        printErrorMsg("setsockopt");
-    }
-    sockaddr_in sa;
-    memset(&sa, 0, sizeof(struct sockaddr_in));
-    sa.sin_family = AF_INET;
-    sa.sin_port = htons(static_cast<uint16_t>(port));
-    if ( bind(fd, (sockaddr*) &sa, sizeof(sa)) < 0 )
-        printErrorMsg("bind");
     return fd;
 }
-void TcpSocket::setTcpNoDelay()
+void TcpSocket::setTcpNoDelay(int fd)
 {
     int on = 1;
-    if ( setsockopt(fd_, IPPROTO_TCP, TCP_NODELAY, (void*) &on, sizeof(on)))
+    if ( setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void*) &on, sizeof(on)))
         printErrorMsg("setsockpot");
 }
-bool TcpSocket::sockConnect(int fd,const char* conn_ip, uint16_t conn_port)
+bool TcpSocket::sockConnect(int fd, const char* conn_ip, uint16_t conn_port)
 {
     assert(conn_ip != NULL);
     sockaddr_in conAddr;
@@ -159,6 +148,32 @@ bool TcpSocket::sockConnect(int fd,const char* conn_ip, uint16_t conn_port)
     socklen_t len = sizeof(conAddr);
     int flag = ::connect(fd, (sockaddr*) &conAddr, len);
     return flag >= 0;
+}
+int TcpSocket::noblockingConnect(int fd, const char* conn_ip, uint16_t conn_port, size_t time_out_ms)
+{
+    if ( !sockConnect(fd, conn_ip, conn_port)) {
+        if ( errno != EINPROGRESS ) {
+            return -1;
+        }
+        else {
+            fd_set set;
+            timeval tm;
+            tm.tv_sec = 3;
+            tm.tv_usec = time_out_ms * 1000;
+            FD_ZERO(&set);
+            FD_SET(fd, &set);
+            if ( select(fd + 1, NULL, &set, NULL, &tm) > 0 ) {
+                int error;
+                socklen_t len = sizeof(error);
+                getsockopt(fd, SOL_SOCKET, SO_ERROR, &error, &len);
+                if ( !error )
+                    return 0;
+                else
+                    return -1;
+            }
+        }
+    }
+    return 0;
 }
 }//namespace net
 

@@ -6,10 +6,30 @@ void listenRcb(int listenFd, Epoll& epoll);
 
 void clientRcb(int fd, Epoll& epoll);
 
-int main()
+int main(int argc,char* argv[])
 {
 
-    SocketFd listenSock;
+    if (argc < 2) {
+        std::cerr << "argc < 2   !\n ";
+        return -1;
+    }
+    bool isClient=false;
+    for(int i= 1;i< argc;++i)
+    {
+        switch (*argv[i])
+        {
+        case 'c':
+            isClient =true;
+            break;
+        case 'l':
+            isClient=false;
+            break;
+        default:
+            break;
+        }
+    }
+
+    SocketFd sock;
     listenSock.CreateSocket(kPort);
     listenSock.Listen();
 

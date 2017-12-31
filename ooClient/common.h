@@ -17,7 +17,18 @@ inline void printErrorMsg(const char* msg)
 }
 #ifndef _WIN32
 
-bool setFdNonBlocking(int fd);
+inline int setFdNonBlocking(int fd)
+{
+	int flag,old_flag;
+
+	if((old_flag = fcntl(fd, F_GETFL, 0)) == -1)
+		return -1;
+
+	flag =old_flag| O_NONBLOCK;
+
+    fcntl(fd, F_SETFL, flag) ;
+    return old_flag;
+}
 
 #endif // !_WIN32
 

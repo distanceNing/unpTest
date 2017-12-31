@@ -46,11 +46,15 @@ inline void printErrorMsg(const char* msg)
 
 inline bool setFdNonBlocking(int fd)
 {
-    int flag = fcntl(fd, F_SETFL, O_NONBLOCK);
-    if (flag == -1) {
-        printErrorMsg("setFdNonBlocking");
-    }
-    return true;
+    int flag;
+
+    if((flag = fcntl(fd, F_GETFL, 0)) == -1)
+        return false;
+
+    flag |= O_NONBLOCK;
+
+    return fcntl(fd, F_SETFL, flag) != -1;
+
 }
 
 inline int64_t nowTime()
