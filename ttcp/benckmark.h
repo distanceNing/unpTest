@@ -13,7 +13,7 @@
 
 #include <memory>
 #include <cstdio>
-
+extern struct Option gOption;
 namespace  net{
 class TimerFd;
 }
@@ -32,29 +32,14 @@ struct Option {
       connect_timeout_ms_ = 3000;
       server_port_ = 9000;
       concurrent_num_ = 1024;
-      is_keep_alive_ = true;
+      is_keep_alive_ = false;
       thread_num_ = 1;
       interval_time_s_ = 0;
   }
 
-  static void printDefautOption()
-  {
+  void printCurrentOption();
 
-      printf("Defaut Option : \n");
-      printf("\thost               = 127.0.0.1\n"
-              "\ttimeout_ms         = 3000\n"
-              "\tserver_port        = 9000\n"
-              "\tconcurrent_num     = 1024\n"
-              "\tis_keep_alive      = true\n"
-              "\tthread_num         = 1\n");
-      printf("Usage: %s \n"
-              "\t  [-h host] \n"
-              "\t  [-p source_port] \n"
-              "\t  [-c concurrent_num] \n"
-              "\t  [-t thread_num] \n"
-              "\t  [-a is_keep_alive] \n"
-              "\t  [-w timeout] \n", "benchmark");
-  }
+  static void printDefautOption();
 };
 
 class BenchMark {
@@ -77,23 +62,10 @@ public:
     //调用run使得测试运行起来
     void run();
 
-    void setConcurrentNum(size_t num)
-    {
-        option_.concurrent_num_ = num;
-    }
-    void setIntervalTimes(uint32_t time)
-    {
-        option_.interval_time_s_=time;
-    }
 
-    void setUserOption(int argc, char** argv)
-    {
-
-    }
 private:
     void benchmark();
     //std::unique_ptr<net::TimerFd> timer_;
-    Option option_;
     bool isLoop_;
     Epoll::ReadCallBack readCallBack_;
     Epoll::WriteCallBack writeCallBack_;

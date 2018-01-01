@@ -9,15 +9,44 @@
 #include <csignal>
 #include "benckmark.h"
 
-
 #define   HEAD_SIZE   7
+
+
+static int
+process_parameters (int argc, char **argv)
+{
+    int c;
+    while ((c = getopt(argc, argv, "h:p:t:c:a")) != -1) {
+        switch (c) {
+        case 'a':gOption.is_keep_alive_ = true;
+            break;
+        case 'h':gOption.server_ip_ = optarg;
+            break;
+        case 't':gOption.thread_num_ = (size_t) atoi(optarg);
+            break;
+        case 'p':gOption.server_port_ = (uint16_t) atoi(optarg);
+            break;
+        case 'c':gOption.concurrent_num_ = (uint16_t) atoi(optarg);
+            break;
+        default:Option::printDefautOption();
+            return 0;
+        }
+    }
+
+    return 0;
+}
+
+
 
 int main(int argc, char* argv[])
 {
-    //if ( argc < 2 ) {
-    //    Option::printDefautOption();
-    //    return 0;
-    //}
+    if(argc < 2)
+    {
+        Option::printDefautOption();
+    }
+    else
+        process_parameters(argc,argv);
+
     BenchMark benchMark;
 
     //构造一个心跳包
@@ -37,18 +66,16 @@ int main(int argc, char* argv[])
       size_t readable = buf->readableBytes();
       buf->read(recv_buf, readable);
       printf("%s\n", recv_buf);
-
       ::send(fd, buffer, pktSize, MSG_NOSIGNAL);
+      if(gOption.is_keep_alive_)
+      {}
     });
-
 
 
     benchMark.setWriteCallBack([buffer, pktSize](int fd) {
       ::send(fd, buffer, pktSize, MSG_NOSIGNAL);
     });
 
-    benchMark.setIntervalTimes(5);
-    benchMark.setConcurrentNum(1);
     benchMark.run();
     return 0;
 }
