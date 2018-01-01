@@ -24,7 +24,7 @@ public:
     TcpSocket()
     {
     }
-    static int create_and_bind(int port = 0, int af = AF_INET, int type = SOCK_STREAM);
+    static int create_and_bind( int af = AF_INET, int type = SOCK_STREAM);
 
     static bool sockConnect(int fd,const char* conn_ip,uint16_t conn_port);
 

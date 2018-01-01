@@ -15,9 +15,12 @@ void Epoll::handleEvent(size_t ready_num)
         if ( event.events & EPOLLOUT )
         {
             //写入一些数据后,关闭对EPOLLOUT事件的关注
-            ::write(fd,hello,strlen(hello));
-            event.events |=~EPOLLOUT;
-            epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, fd, &event);
+            if(writecb_)
+                writecb_(fd);
+            struct epoll_event ev;
+            ev.data.fd = fd;
+            ev.events = EPOLLIN;
+            epoll_ctl(epoll_fd_, EPOLL_CTL_MOD, fd, &ev);
         }
         else if(epollEventList_[i].events & EPOLLIN){
             handleRead(fd);

@@ -7,6 +7,7 @@
 //
 
 #include "socket_buf.h"
+#include "../common.h"
 #include <assert.h>
 
 namespace net {
@@ -17,8 +18,9 @@ bool net::SocketBuf::read(char* data, size_t bytes)
     assert(data != NULL && bytes >= 0);
     if (bytes > readableBytes())
         return false;
-    memcpy(data, readBegin(), bytes);
-    readIndex_ += bytes;
+    const char* temp=readBegin();
+    memcpy(data, temp, bytes);
+    skip(bytes);
     return true;
 }
 
@@ -55,7 +57,7 @@ bool net::SocketBuf::write(net::SocketBuf& buf, size_t bytes)
 void SocketBuf::grow(size_t len)
 {
     if (writeableBytes() + prependBytes() < len + kPrepend) {
-        int size = static_cast<int>(capacity_ * kGrowthFactor + len);
+        size_t size = static_cast<size_t>(capacity_ * kGrowthFactor + len);
         char* buf = new char[size];
         memset(buf, 0, size);
         assert(buf != NULL);
@@ -82,8 +84,14 @@ ssize_t SocketBuf::readFromFd(int fd)
     iov[1].iov_len = 65535;
 
     ssize_t read_size = readv(fd, iov, 2);
-
-    if (read_size > writeable) {
+    if(read_size < 0)
+    {
+        if(errno == ECONNRESET)
+            return 0;
+        else
+            printErrorMsg("readv");
+    }
+    else if (read_size > writeable) {
         writeIndex_ += writeable;
         write(extrabuf, read_size - writeable);
     }

@@ -25,9 +25,11 @@ class Epoll{
 public:
     using EpollEventList=std::vector<struct epoll_event>;
     using EventCallBack=std::function<void()>;
+    using WriteCallBack=std::function<void(int fd)>;
     using ReadCallBack=std::function<void(net::SocketBuf*,int)>;
     //using FdMap =std::map<int,EventCallBack>;
     static const int kInitSize= 1024;
+    static const int kNonWriting=~EPOLLOUT;
     Epoll(size_t init_size=kInitSize):epollEventList_(init_size),epoll_fd_(epoll_create1(EPOLL_FLAGS)){
         if (epoll_fd_ < 0)
             printErrorMsg("epoll create");
@@ -41,7 +43,7 @@ public:
 
     void setReadcb(const ReadCallBack& readcb);
 
-    void setWritecb(const EventCallBack& writecb)
+    void setWritecb(const WriteCallBack& writecb)
     {
         writecb_ = writecb;
     }
@@ -54,10 +56,12 @@ private:
     void handleEvent(size_t ready_num);
 
     void handleRead(int fd);
+
+
     int epoll_fd_;
     //FdMap fd_map_;
     ReadCallBack readcb_;
-    EventCallBack writecb_;
+    WriteCallBack writecb_;
     net::SocketBuf socketBuf_;
     EpollEventList epollEventList_;
 };

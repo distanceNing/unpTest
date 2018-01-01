@@ -123,7 +123,7 @@ ssize_t TcpSocket::read_n(void* msg, size_t buf_len)
     }
     return recv_size;
 }
-int TcpSocket::create_and_bind(int port, int af, int type)
+int TcpSocket::create_and_bind( int af, int type)
 {
     int fd;
     fd = socket(af, type, 0);
@@ -168,6 +168,8 @@ int TcpSocket::noblockingConnect(int fd, const char* conn_ip, uint16_t conn_port
                 getsockopt(fd, SOL_SOCKET, SO_ERROR, &error, &len);
                 if ( !error )
                     return 0;
+               // else if ( error == EINPROGRESS )
+                    //    goto wait;
                 else
                     return -1;
             }
